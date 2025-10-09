@@ -1,4 +1,6 @@
 export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
 
 // POST /api/track - Public event collector for ChatGPT App Analytics
 import { NextRequest, NextResponse } from 'next/server';

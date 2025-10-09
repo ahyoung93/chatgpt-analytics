@@ -1,4 +1,6 @@
 export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
 
 // GET /api/metrics/timeseries - Get time series data for charts
 import { NextRequest, NextResponse } from 'next/server';

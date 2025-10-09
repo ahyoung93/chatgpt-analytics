@@ -1,4 +1,6 @@
 export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
 
 // GET /api/metrics/top-sources - Get top traffic sources
 import { NextRequest, NextResponse } from 'next/server';

@@ -1,4 +1,6 @@
 export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
 
 // POST /api/export - Generate CSV export (Pro/Team only)
 import { NextRequest, NextResponse } from 'next/server';

@@ -2,16 +2,45 @@
 
 import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Building2, CreditCard, Users } from 'lucide-react';
+import { Building2, Code, Shield, Trash2, Copy, Check } from 'lucide-react';
 
 export default function SettingsPage() {
   const [orgName, setOrgName] = useState('My Organization');
-  const [plan, setPlan] = useState('free');
+  const [selectedApp, setSelectedApp] = useState('app-123');
+  const [optInBenchmarks, setOptInBenchmarks] = useState(true);
+  const [copied, setCopied] = useState(false);
 
-  const plans = {
-    free: { name: 'Free', price: '$0/month', features: ['7 days retention', '1 app', '10k events/month'] },
-    pro: { name: 'Pro', price: '$49/month', features: ['90 days retention', '5 apps', 'Benchmarks', 'CSV export'] },
-    team: { name: 'Team', price: '$99/month', features: ['180 days retention', 'Unlimited apps', 'Priority support'] }
+  const apps = [
+    { id: 'app-123', name: 'Travel Assistant', category: 'travel' },
+    { id: 'app-456', name: 'Code Helper', category: 'dev_tools' }
+  ];
+
+  const selectedAppData = apps.find(app => app.id === selectedApp);
+
+  const sdkCode = `import { createClient } from '@odin-analytics/sdk';
+
+// Initialize with your app's write key
+const analytics = createClient({
+  appKey: 'sk_your_write_key_here'
+});
+
+// Track events
+await analytics.invoked();
+await analytics.completed({ latency_ms: 1200 });
+await analytics.error('API timeout');
+await analytics.converted('purchase_completed');`;
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(sdkCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDeleteApp = () => {
+    if (confirm('Are you sure you want to delete this app? This action cannot be undone.')) {
+      // TODO: Implement delete
+      console.log('Deleting app:', selectedApp);
+    }
   };
 
   return (
@@ -45,59 +74,122 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Subscription */}
+          {/* SDK Integration */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-6">
-              <CreditCard className="w-6 h-6 text-gray-600" />
-              <h2 className="text-xl font-bold text-gray-900">Subscription</h2>
+              <Code className="w-6 h-6 text-gray-600" />
+              <h2 className="text-xl font-bold text-gray-900">SDK Integration</h2>
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Current Plan</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {plans[plan as keyof typeof plans].name}
-                  <span className="text-base font-normal text-gray-600 ml-2">
-                    {plans[plan as keyof typeof plans].price}
-                  </span>
-                </p>
+                <label htmlFor="appSelect" className="block text-sm font-medium text-gray-700 mb-2">
+                  Select App
+                </label>
+                <select
+                  id="appSelect"
+                  value={selectedApp}
+                  onChange={(e) => setSelectedApp(e.target.value)}
+                  className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                >
+                  {apps.map(app => (
+                    <option key={app.id} value={app.id}>{app.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Features</p>
-                <ul className="space-y-1">
-                  {plans[plan as keyof typeof plans].features.map((feature, index) => (
-                    <li key={index} className="text-sm text-gray-600">✓ {feature}</li>
-                  ))}
-                </ul>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Integration Code
+                  </label>
+                  <button
+                    onClick={copyCode}
+                    className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy Code
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                  <pre>{sdkCode}</pre>
+                </div>
               </div>
-              {plan === 'free' && (
-                <a
-                  href="/pricing"
-                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Upgrade Plan
-                </a>
-              )}
-              {plan !== 'free' && (
-                <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                  Manage Subscription
-                </button>
-              )}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Installation:</strong> Run <code className="bg-white px-2 py-0.5 rounded">npm install @odin-analytics/sdk</code> to get started.
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Team Members */}
+          {/* Privacy Settings */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-gray-600" />
-                <h2 className="text-xl font-bold text-gray-900">Team Members</h2>
-              </div>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                Invite Member
-              </button>
+            <div className="flex items-center gap-3 mb-6">
+              <Shield className="w-6 h-6 text-gray-600" />
+              <h2 className="text-xl font-bold text-gray-900">Privacy Settings</h2>
             </div>
-            <div className="text-center py-8 text-gray-500">
-              No team members yet. Invite collaborators to join your organization.
+            <div className="space-y-4">
+              <div className="flex items-start justify-between py-3 border-b border-gray-100">
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    Opt-in to Anonymous Benchmarks
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Include your app&apos;s anonymized data in category benchmarks. Requires Pro plan. Your data is protected with k-anonymity (k ≥ 7).
+                  </p>
+                </div>
+                <button
+                  onClick={() => setOptInBenchmarks(!optInBenchmarks)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 ml-4 ${
+                    optInBenchmarks ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      optInBenchmarks ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Privacy Guarantee:</strong> We never collect PII, raw prompts, or user data. Only aggregate metrics (success rate, latency) are used for benchmarks.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="bg-white rounded-lg border-2 border-red-200 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <Trash2 className="w-6 h-6 text-red-600" />
+              <h2 className="text-xl font-bold text-red-900">Danger Zone</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    Delete App: {selectedAppData?.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 max-w-xl">
+                    Permanently delete this app and all associated event data. This action cannot be undone.
+                  </p>
+                </div>
+                <button
+                  onClick={handleDeleteApp}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4"
+                >
+                  Delete App
+                </button>
+              </div>
             </div>
           </div>
         </div>

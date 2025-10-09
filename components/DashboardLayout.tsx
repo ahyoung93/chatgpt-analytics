@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Home, Layers, TrendingUp, Settings, LogOut } from 'lucide-react';
+import { BarChart3, Home, Layers, TrendingUp, Settings, LogOut, Activity, CreditCard } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,7 +14,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: Home },
     { name: 'Apps', href: '/dashboard/apps', icon: Layers },
+    { name: 'Events', href: '/dashboard/events', icon: Activity },
     { name: 'Benchmarks', href: '/dashboard/benchmarks', icon: TrendingUp },
+    { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 

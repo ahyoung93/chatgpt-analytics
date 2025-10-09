@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "postinstall": "echo 'Cleaning build cache...' && rm -rf .next .vercel/cache",
     "prebuild": "rm -rf .next",
     "build": "next build",
     "start": "next start",

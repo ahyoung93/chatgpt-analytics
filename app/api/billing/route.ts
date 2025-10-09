@@ -88,9 +88,9 @@ export async function POST(request: NextRequest) {
 }
 
 // GET - Get billing portal URL
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const orgId = searchParams.get('orgId');
 
     if (!orgId) {

@@ -8,9 +8,9 @@ import { getCategoryBenchmarks } from '@/lib/metrics';
 import { hasFeatureAccess } from '@/lib/auth';
 import { AppCategory } from '@/lib/database.types';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as AppCategory | null;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');

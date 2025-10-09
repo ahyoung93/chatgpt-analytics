@@ -6,9 +6,9 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
 import { getAppTimeSeriesData } from '@/lib/metrics';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const appId = searchParams.get('appId');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');

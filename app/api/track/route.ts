@@ -4,6 +4,8 @@ import { authenticateTrackRequest } from '@/lib/auth';
 import { createServerClient, checkRateLimit } from '@/lib/db';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 // Validation schema for track events
 const trackEventSchema = z.object({
   event: z.enum(['invoked', 'completed', 'error', 'converted', 'custom']),

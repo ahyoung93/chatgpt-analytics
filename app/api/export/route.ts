@@ -4,6 +4,8 @@ import { hasFeatureAccess } from '@/lib/auth';
 import { generateCSVExport } from '@/lib/export';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const exportRequestSchema = z.object({
   appId: z.string(),
   startDate: z.string().optional(),

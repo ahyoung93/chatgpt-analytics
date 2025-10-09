@@ -4,6 +4,8 @@ import { createServerClient } from '@/lib/db';
 import { createCheckoutSession, createBillingPortalSession, PRICING_PLANS } from '@/lib/stripe';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const checkoutRequestSchema = z.object({
   orgId: z.string(),
   plan: z.enum(['pro', 'team']),

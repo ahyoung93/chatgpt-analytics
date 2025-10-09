@@ -1,10 +1,10 @@
+export const dynamic = 'force-dynamic';
+
 // POST /api/track - Public event collector for ChatGPT App Analytics
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateTrackRequest } from '@/lib/auth';
 import { createServerClient, checkRateLimit } from '@/lib/db';
 import { z } from 'zod';
-
-export const dynamic = 'force-dynamic';
 
 // Validation schema for track events
 const trackEventSchema = z.object({

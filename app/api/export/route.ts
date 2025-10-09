@@ -1,10 +1,10 @@
+export const dynamic = 'force-dynamic';
+
 // POST /api/export - Generate CSV export (Pro/Team only)
 import { NextRequest, NextResponse } from 'next/server';
 import { hasFeatureAccess } from '@/lib/auth';
 import { generateCSVExport } from '@/lib/export';
 import { z } from 'zod';
-
-export const dynamic = 'force-dynamic';
 
 const exportRequestSchema = z.object({
   appId: z.string(),

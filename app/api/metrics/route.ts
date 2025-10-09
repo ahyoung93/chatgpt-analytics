@@ -1,9 +1,9 @@
+export const dynamic = 'force-dynamic';
+
 // GET /api/metrics - Get app metrics
 import { NextRequest, NextResponse } from 'next/server';
 import { getAppMetricsSummary, getAppTimeSeriesData, getCategoryBenchmarks } from '@/lib/metrics';
 import { hasFeatureAccess } from '@/lib/auth';
-
-export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,10 +1,10 @@
+export const dynamic = 'force-dynamic';
+
 // Stripe webhook handler
 import { NextRequest, NextResponse } from 'next/server';
 import { constructWebhookEvent, getPlanFromPriceId } from '@/lib/stripe';
 import { createServerClient } from '@/lib/db';
 import Stripe from 'stripe';
-
-export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();

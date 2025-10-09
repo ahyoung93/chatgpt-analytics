@@ -1,72 +1,61 @@
-// API route to get analytics metrics
+// GET /api/metrics - Get app metrics
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateRequest } from '@/lib/auth';
-import { getUserMetrics, getRecentSessions } from '@/lib/metrics';
-import { logApiCall } from '@/lib/db';
+import { getAppMetricsSummary, getAppTimeSeriesData, getCategoryBenchmarks } from '@/lib/metrics';
+import { hasFeatureAccess } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
-  const startTime = Date.now();
-
   try {
-    // Authenticate request
-    const { user, error: authError } = await authenticateRequest(request);
+    const searchParams = request.nextUrl.searchParams;
+    const appId = searchParams.get('appId');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const includeBenchmarks = searchParams.get('includeBenchmarks') === 'true';
+    const category = searchParams.get('category');
+    const plan = searchParams.get('plan') as 'free' | 'pro' | 'team' | null;
 
-    if (authError || !user) {
+    if (!appId) {
       return NextResponse.json(
-        { error: authError || 'Unauthorized' },
-        { status: 401 }
+        { error: 'appId is required' },
+        { status: 400 }
       );
     }
 
-    // Parse query parameters
-    const searchParams = request.nextUrl.searchParams;
-    const startDateParam = searchParams.get('startDate');
-    const endDateParam = searchParams.get('endDate');
-    const includeSessionsParam = searchParams.get('includeSessions');
-
-    // Default to last 30 days if not specified
-    const endDate = endDateParam ? new Date(endDateParam) : new Date();
-    const startDate = startDateParam
-      ? new Date(startDateParam)
+    const end = endDate ? new Date(endDate) : new Date();
+    const start = startDate
+      ? new Date(startDate)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    // Get metrics
-    const metrics = await getUserMetrics(user.id, startDate, endDate);
+    // Get summary metrics
+    const summary = await getAppMetricsSummary(appId, start, end);
 
-    // Optionally include recent sessions
-    let sessions = null;
-    if (includeSessionsParam === 'true') {
-      sessions = await getRecentSessions(user.id, 20);
+    // Get time series data
+    const timeSeries = await getAppTimeSeriesData(appId, start, end);
+
+    const response: any = {
+      success: true,
+      summary,
+      timeSeries
+    };
+
+    // Include benchmarks if requested and user has Pro/Team plan
+    if (includeBenchmarks && category && plan) {
+      if (hasFeatureAccess(plan, 'benchmarks')) {
+        const benchmarks = await getCategoryBenchmarks(category as any, start, end);
+        response.benchmarks = benchmarks;
+      } else {
+        response.benchmarks = {
+          available: false,
+          message: 'Upgrade to Pro or Team plan to access category benchmarks'
+        };
+      }
     }
 
-    // Log API call
-    await logApiCall(
-      user.id,
-      '/api/metrics',
-      'GET',
-      200,
-      Date.now() - startTime,
-      request.headers.get('x-forwarded-for') || undefined,
-      request.headers.get('user-agent') || undefined
-    );
-
-    return NextResponse.json({
-      success: true,
-      dateRange: {
-        start: startDate.toISOString(),
-        end: endDate.toISOString()
-      },
-      metrics,
-      sessions
-    });
+    return NextResponse.json(response);
   } catch (error: any) {
     console.error('Metrics API error:', error);
 
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error.message
-      },
+      { error: 'Internal server error', message: error.message },
       { status: 500 }
     );
   }

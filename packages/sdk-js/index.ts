@@ -1,208 +1,94 @@
 /**
- * ChatGPT Analytics SDK
+ * ChatGPT App Analytics SDK
  *
- * This SDK helps you track ChatGPT usage and send analytics to your dashboard.
+ * Track your ChatGPT app performance (Custom GPTs, Plugins, MCP servers)
  *
  * @example
  * ```typescript
- * import { ChatGPTAnalytics } from '@chatgpt-analytics/sdk-js';
+ * import { createClient } from '@chatgpt-app-analytics/sdk';
  *
- * const analytics = new ChatGPTAnalytics('your-api-key');
+ * const analytics = createClient({ appKey: 'sk_...' });
  *
- * // Track a message
- * await analytics.track({
- *   sessionId: 'unique-session-id',
- *   message: {
- *     role: 'user',
- *     content: 'Hello, how are you?',
- *     model: 'gpt-4'
- *   }
- * });
+ * // Track when your app is invoked
+ * await analytics.track('invoked', { source: 'suggestion' });
+ *
+ * // Track successful completion
+ * await analytics.track('completed', { latency_ms: 1200 });
+ *
+ * // Track errors
+ * await analytics.track('error', { error_message: 'API timeout' });
  * ```
  */
 
-export interface TrackMessageOptions {
-  sessionId: string;
-  message: {
-    role: 'user' | 'assistant' | 'system';
-    content: string;
-    model?: string;
-    promptTokens?: number;
-    completionTokens?: number;
-    totalTokens?: number;
-    latencyMs?: number;
-    metadata?: Record<string, any>;
-  };
-  sessionMetadata?: {
-    title?: string;
-    model?: string;
-    metadata?: Record<string, any>;
-  };
+export type EventType = 'invoked' | 'completed' | 'error' | 'converted' | 'custom';
+
+export interface TrackOptions {
+  name?: string;
+  properties?: Record<string, any>;
+  prompt_hash?: string;
+  error_message?: string;
+  latency_ms?: number;
 }
 
-export interface MetricsOptions {
-  startDate?: Date;
-  endDate?: Date;
-  includeSessions?: boolean;
-}
-
-export interface ExportOptions {
-  format: 'csv' | 'json' | 'pdf';
-  startDate?: Date;
-  endDate?: Date;
-}
-
-export interface AnalyticsConfig {
-  apiKey: string;
+export interface ClientConfig {
+  appKey: string;
   baseUrl?: string;
   timeout?: number;
 }
 
-export class ChatGPTAnalytics {
-  private apiKey: string;
+export class ChatGPTAppAnalytics {
+  private appKey: string;
   private baseUrl: string;
   private timeout: number;
 
-  constructor(config: string | AnalyticsConfig) {
-    if (typeof config === 'string') {
-      this.apiKey = config;
-      this.baseUrl = 'https://your-app.vercel.app';
-      this.timeout = 10000;
-    } else {
-      this.apiKey = config.apiKey;
-      this.baseUrl = config.baseUrl || 'https://your-app.vercel.app';
-      this.timeout = config.timeout || 10000;
-    }
+  constructor(config: ClientConfig) {
+    this.appKey = config.appKey;
+    this.baseUrl = config.baseUrl || 'https://your-app.vercel.app';
+    this.timeout = config.timeout || 5000;
   }
 
   /**
-   * Track a ChatGPT message
+   * Track an event
+   *
+   * @param event - Event type: 'invoked', 'completed', 'error', 'converted', or 'custom'
+   * @param options - Event options (name, properties, latency, etc.)
+   *
+   * @example
+   * ```typescript
+   * // Track invocation
+   * await analytics.track('invoked');
+   *
+   * // Track completion with latency
+   * await analytics.track('completed', { latency_ms: 1200 });
+   *
+   * // Track error
+   * await analytics.track('error', {
+   *   error_message: 'Database connection failed',
+   *   properties: { retry_count: 3 }
+   * });
+   *
+   * // Track conversion
+   * await analytics.track('converted', {
+   *   name: 'purchase_completed',
+   *   properties: { amount: 99.99 }
+   * });
+   * ```
    */
-  async track(options: TrackMessageOptions): Promise<{
-    success: boolean;
-    messageId: string;
-    sessionId: string;
-    cost: number;
-    remainingCalls: number;
-  }> {
-    const response = await this.makeRequest('/api/track', {
-      method: 'POST',
-      body: JSON.stringify(options)
-    });
-
-    return response;
-  }
-
-  /**
-   * Get analytics metrics
-   */
-  async getMetrics(options?: MetricsOptions): Promise<any> {
-    const params = new URLSearchParams();
-
-    if (options?.startDate) {
-      params.append('startDate', options.startDate.toISOString());
-    }
-
-    if (options?.endDate) {
-      params.append('endDate', options.endDate.toISOString());
-    }
-
-    if (options?.includeSessions) {
-      params.append('includeSessions', 'true');
-    }
-
-    const url = `/api/metrics${params.toString() ? `?${params.toString()}` : ''}`;
-
-    const response = await this.makeRequest(url, { method: 'GET' });
-
-    return response;
-  }
-
-  /**
-   * Export analytics data
-   */
-  async export(options: ExportOptions): Promise<{
-    success: boolean;
-    exportId: string;
-    message: string;
-  }> {
-    const response = await this.makeRequest('/api/export', {
-      method: 'POST',
-      body: JSON.stringify({
-        format: options.format,
-        startDate: options.startDate?.toISOString(),
-        endDate: options.endDate?.toISOString()
-      })
-    });
-
-    return response;
-  }
-
-  /**
-   * Get export status
-   */
-  async getExportStatus(exportId: string): Promise<any> {
-    const response = await this.makeRequest(`/api/export?exportId=${exportId}`, {
-      method: 'GET'
-    });
-
-    return response;
-  }
-
-  /**
-   * Create billing checkout session
-   */
-  async createCheckout(tier: 'pro' | 'enterprise', options?: {
-    successUrl?: string;
-    cancelUrl?: string;
-  }): Promise<{
-    success: boolean;
-    sessionId: string;
-    url: string;
-  }> {
-    const response = await this.makeRequest('/api/billing', {
-      method: 'POST',
-      body: JSON.stringify({
-        tier,
-        successUrl: options?.successUrl,
-        cancelUrl: options?.cancelUrl
-      })
-    });
-
-    return response;
-  }
-
-  /**
-   * Get billing portal URL
-   */
-  async getBillingPortal(): Promise<{
-    success: boolean;
-    url: string;
-  }> {
-    const response = await this.makeRequest('/api/billing', {
-      method: 'GET'
-    });
-
-    return response;
-  }
-
-  /**
-   * Make an API request
-   */
-  private async makeRequest(endpoint: string, options: RequestInit): Promise<any> {
-    const url = `${this.baseUrl}${endpoint}`;
-
+  async track(event: EventType, options: TrackOptions = {}): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      const response = await fetch(url, {
-        ...options,
+      const response = await fetch(`${this.baseUrl}/api/track`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': this.apiKey,
-          ...options.headers
+          'x-app-key': this.appKey
         },
+        body: JSON.stringify({
+          event,
+          ...options
+        }),
         signal: controller.signal
       });
 
@@ -212,40 +98,69 @@ export class ChatGPTAnalytics {
         const error = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(error.error || `HTTP ${response.status}`);
       }
-
-      return await response.json();
     } catch (error: any) {
       clearTimeout(timeoutId);
 
       if (error.name === 'AbortError') {
-        throw new Error('Request timeout');
+        console.error('[ChatGPT App Analytics] Request timeout');
+        return; // Fail silently on timeout
       }
 
-      throw error;
+      console.error('[ChatGPT App Analytics] Track error:', error.message);
+      // Fail silently to not break user's app
     }
+  }
+
+  /**
+   * Track app invocation
+   */
+  async invoked(options?: Omit<TrackOptions, 'event'>): Promise<void> {
+    return this.track('invoked', options);
+  }
+
+  /**
+   * Track successful completion
+   */
+  async completed(options?: Omit<TrackOptions, 'event'>): Promise<void> {
+    return this.track('completed', options);
+  }
+
+  /**
+   * Track error
+   */
+  async error(errorMessage: string, options?: Omit<TrackOptions, 'event' | 'error_message'>): Promise<void> {
+    return this.track('error', { ...options, error_message: errorMessage });
+  }
+
+  /**
+   * Track conversion
+   */
+  async converted(name?: string, options?: Omit<TrackOptions, 'event' | 'name'>): Promise<void> {
+    return this.track('converted', { ...options, name });
+  }
+
+  /**
+   * Track custom event
+   */
+  async custom(name: string, options?: Omit<TrackOptions, 'event' | 'name'>): Promise<void> {
+    return this.track('custom', { ...options, name });
   }
 }
 
 /**
- * Helper function to automatically track OpenAI API calls
+ * Create a ChatGPT App Analytics client
+ *
+ * @param config - Client configuration with appKey
+ * @returns Analytics client instance
  *
  * @example
  * ```typescript
- * import { trackOpenAI } from '@chatgpt-analytics/sdk-js';
- *
- * const analytics = trackOpenAI('your-api-key');
- *
- * // Wrap your OpenAI call
- * const response = await analytics.chat.completions.create({
- *   model: 'gpt-4',
- *   messages: [{ role: 'user', content: 'Hello!' }]
- * });
+ * const analytics = createClient({ appKey: 'sk_...' });
  * ```
  */
-export function trackOpenAI(apiKey: string, sessionId?: string) {
-  // This would be implemented to wrap OpenAI SDK calls
-  // For now, this is a placeholder for future enhancement
-  console.warn('trackOpenAI is not yet implemented. Use analytics.track() manually.');
+export function createClient(config: ClientConfig): ChatGPTAppAnalytics {
+  return new ChatGPTAppAnalytics(config);
 }
 
-export default ChatGPTAnalytics;
+// Default export
+export default { createClient, ChatGPTAppAnalytics };

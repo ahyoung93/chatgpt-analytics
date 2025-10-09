@@ -1,72 +1,57 @@
-// API route for billing operations
+// Billing API routes
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateRequest } from '@/lib/auth';
 import { createServerClient } from '@/lib/db';
-import {
-  createCheckoutSession,
-  createBillingPortalSession,
-  PRICING_PLANS
-} from '@/lib/stripe';
+import { createCheckoutSession, createBillingPortalSession, PRICING_PLANS } from '@/lib/stripe';
 import { z } from 'zod';
 
 const checkoutRequestSchema = z.object({
-  tier: z.enum(['pro', 'enterprise']),
+  orgId: z.string(),
+  plan: z.enum(['pro', 'team']),
   successUrl: z.string().url().optional(),
   cancelUrl: z.string().url().optional()
 });
 
-// Create checkout session
+// POST - Create checkout session
 export async function POST(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateRequest(request);
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: authError || 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
-    const { tier, successUrl, cancelUrl } = checkoutRequestSchema.parse(body);
+    const { orgId, plan, successUrl, cancelUrl } = checkoutRequestSchema.parse(body);
 
     const supabase = createServerClient();
 
-    // Get user's Stripe customer ID
-    const { data: userData } = await supabase
-      .from('users')
-      .select('stripe_customer_id, email, name')
-      .eq('id', user.id)
+    const { data: org } = await supabase
+      .from('orgs')
+      .select('stripe_customer_id, name')
+      .eq('id', orgId)
       .single();
 
-    if (!userData) {
+    if (!org) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'Organization not found' },
         { status: 404 }
       );
     }
 
-    let customerId = userData.stripe_customer_id;
+    let customerId = org.stripe_customer_id;
 
     // Create Stripe customer if doesn't exist
     if (!customerId) {
       const { createStripeCustomer } = await import('@/lib/stripe');
       const customer = await createStripeCustomer(
-        userData.email,
-        userData.name || undefined,
-        { userId: user.id }
+        `org-${orgId}@example.com`, // You might want to get actual email
+        org.name,
+        orgId
       );
 
       customerId = customer.id;
 
-      // Update user with customer ID
       await supabase
-        .from('users')
+        .from('orgs')
         .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+        .eq('id', orgId);
     }
 
-    const priceId = PRICING_PLANS[tier].priceId;
+    const priceId = PRICING_PLANS[plan].priceId;
 
     if (!priceId) {
       return NextResponse.json(
@@ -75,7 +60,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create checkout session
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const session = await createCheckoutSession(
       customerId,
@@ -93,36 +77,34 @@ export async function POST(request: NextRequest) {
     console.error('Billing API error:', error);
 
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error.message
-      },
+      { error: 'Internal server error', message: error.message },
       { status: 500 }
     );
   }
 }
 
-// Get billing portal
+// GET - Get billing portal URL
 export async function GET(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateRequest(request);
+    const searchParams = request.nextUrl.searchParams;
+    const orgId = searchParams.get('orgId');
 
-    if (authError || !user) {
+    if (!orgId) {
       return NextResponse.json(
-        { error: authError || 'Unauthorized' },
-        { status: 401 }
+        { error: 'orgId is required' },
+        { status: 400 }
       );
     }
 
     const supabase = createServerClient();
 
-    const { data: userData } = await supabase
-      .from('users')
+    const { data: org } = await supabase
+      .from('orgs')
       .select('stripe_customer_id')
-      .eq('id', user.id)
+      .eq('id', orgId)
       .single();
 
-    if (!userData?.stripe_customer_id) {
+    if (!org?.stripe_customer_id) {
       return NextResponse.json(
         { error: 'No billing account found' },
         { status: 404 }
@@ -131,7 +113,7 @@ export async function GET(request: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const portalSession = await createBillingPortalSession(
-      userData.stripe_customer_id,
+      org.stripe_customer_id,
       `${appUrl}/dashboard`
     );
 
@@ -143,10 +125,7 @@ export async function GET(request: NextRequest) {
     console.error('Billing portal API error:', error);
 
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error.message
-      },
+      { error: 'Internal server error', message: error.message },
       { status: 500 }
     );
   }

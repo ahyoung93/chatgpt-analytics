@@ -1,8 +1,8 @@
-// Database utilities using Supabase
+// Database utilities for ChatGPT App Analytics
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
-// Client-side Supabase client (uses anon key)
+// Client-side Supabase client
 export const createBrowserClient = () => {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +10,7 @@ export const createBrowserClient = () => {
   );
 };
 
-// Server-side Supabase client (uses service role key for admin operations)
+// Server-side Supabase client
 export const createServerClient = () => {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,99 +24,83 @@ export const createServerClient = () => {
   );
 };
 
-// Helper function to get user by API key
-export async function getUserByApiKey(apiKey: string) {
+// Get app by write_key (for API auth)
+export async function getAppByWriteKey(writeKey: string) {
   const supabase = createServerClient();
 
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('api_key', apiKey)
+  const { data: app, error } = await supabase
+    .from('apps')
+    .select(`
+      *,
+      orgs (
+        id,
+        name,
+        plan,
+        subscription_status
+      )
+    `)
+    .eq('write_key', writeKey)
+    .eq('is_active', true)
     .single();
 
   if (error) {
-    throw new Error('Invalid API key');
+    throw new Error('Invalid write key');
   }
 
-  return user;
+  return app;
 }
 
-// Helper function to check API rate limits
-export async function checkRateLimit(userId: string) {
+// Rate limiting check
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+export async function checkRateLimit(writeKey: string, limit: number = 10): Promise<boolean> {
+  const now = Date.now();
+  const windowMs = 1000; // 1 second window
+
+  const record = rateLimitStore.get(writeKey);
+
+  if (!record || now > record.resetAt) {
+    rateLimitStore.set(writeKey, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+
+  if (record.count >= limit) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+// Check if org can create more apps based on plan
+export async function canCreateApp(orgId: string): Promise<boolean> {
   const supabase = createServerClient();
 
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('api_calls_limit, api_calls_used, api_calls_reset_at')
-    .eq('id', userId)
-    .single();
+  const { data, error } = await supabase
+    .rpc('can_create_app', { org_uuid: orgId });
 
   if (error) {
-    throw new Error('User not found');
+    console.error('Error checking app limit:', error);
+    return false;
   }
 
-  // Check if we need to reset the counter
-  const resetDate = new Date(user.api_calls_reset_at);
-  if (resetDate <= new Date()) {
-    await supabase
-      .from('users')
-      .update({
-        api_calls_used: 0,
-        api_calls_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      })
-      .eq('id', userId);
-
-    return { allowed: true, remaining: user.api_calls_limit };
-  }
-
-  const remaining = user.api_calls_limit - user.api_calls_used;
-
-  if (remaining <= 0) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  // Increment usage
-  await supabase
-    .from('users')
-    .update({ api_calls_used: user.api_calls_used + 1 })
-    .eq('id', userId);
-
-  return { allowed: true, remaining: remaining - 1 };
+  return data as boolean;
 }
 
-// Helper function to log API calls
-export async function logApiCall(
-  userId: string,
-  endpoint: string,
-  method: string,
-  statusCode: number,
-  responseTimeMs: number,
-  ipAddress?: string,
-  userAgent?: string,
-  errorMessage?: string
-) {
+// Get retention days for org's plan
+export async function getRetentionDays(orgId: string): Promise<number> {
   const supabase = createServerClient();
 
-  await supabase.from('api_logs').insert({
-    user_id: userId,
-    endpoint,
-    method,
-    status_code: statusCode,
-    response_time_ms: responseTimeMs,
-    ip_address: ipAddress,
-    user_agent: userAgent,
-    error_message: errorMessage
-  });
-}
+  const { data: org } = await supabase
+    .from('orgs')
+    .select('plan')
+    .eq('id', orgId)
+    .single();
 
-// Helper function to aggregate daily metrics
-export async function aggregateDailyMetrics(userId: string, date: Date) {
-  const supabase = createServerClient();
+  if (!org) return 7;
 
-  const dateStr = date.toISOString().split('T')[0];
+  const { data: days } = await supabase
+    .rpc('get_retention_days', { org_plan: org.plan });
 
-  await supabase.rpc('aggregate_daily_metrics', {
-    target_user_id: userId,
-    target_date: dateStr
-  });
+  return (days as number) || 7;
 }

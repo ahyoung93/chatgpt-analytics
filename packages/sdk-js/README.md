@@ -1,89 +1,119 @@
-# ChatGPT Analytics SDK
+# ChatGPT App Analytics SDK
 
-Track and analyze your ChatGPT usage with ease.
+Official SDK for tracking ChatGPT App performance. Works with Custom GPTs, ChatGPT Plugins, and MCP servers.
 
 ## Installation
 
 ```bash
-npm install @chatgpt-analytics/sdk-js
+npm install @chatgpt-app-analytics/sdk
 # or
-yarn add @chatgpt-analytics/sdk-js
+yarn add @chatgpt-app-analytics/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { ChatGPTAnalytics } from '@chatgpt-analytics/sdk-js';
+import { createClient } from '@chatgpt-app-analytics/sdk';
 
-// Initialize with your API key
-const analytics = new ChatGPTAnalytics('your-api-key');
+// Initialize with your app's write key
+const analytics = createClient({ appKey: 'sk_...' });
 
-// Track a message
-await analytics.track({
-  sessionId: 'unique-session-id',
-  message: {
-    role: 'user',
-    content: 'Hello, how are you?',
-    model: 'gpt-4',
-    totalTokens: 15
-  }
-});
+// Track when your app is invoked
+await analytics.track('invoked');
 
-// Get metrics
-const metrics = await analytics.getMetrics({
-  startDate: new Date('2024-01-01'),
-  endDate: new Date()
-});
+// Track successful completion
+await analytics.track('completed', { latency_ms: 1200 });
 
-// Export data
-const exportResult = await analytics.export({
-  format: 'csv',
-  startDate: new Date('2024-01-01')
+// Track errors
+await analytics.track('error', { error_message: 'API timeout' });
+
+// Track conversions
+await analytics.track('converted', {
+  name: 'purchase_completed',
+  properties: { amount: 99.99 }
 });
 ```
 
-## Features
+## Event Types
 
-- Track ChatGPT conversations
-- Get detailed analytics and metrics
-- Export data in multiple formats (CSV, JSON, PDF)
-- Monitor costs and token usage
-- Manage subscriptions
+- **invoked** - Your app was called
+- **completed** - Your app succeeded
+- **error** - Your app failed
+- **converted** - User achieved a goal
+- **custom** - Your own custom event
 
-## API Reference
+## Helper Methods
 
-### `track(options)`
+```typescript
+// Shorthand methods for common events
+await analytics.invoked();
+await analytics.completed({ latency_ms: 1200 });
+await analytics.error('Database connection failed');
+await analytics.converted('purchase_completed');
+await analytics.custom('user_feedback', { rating: 5 });
+```
 
-Track a ChatGPT message.
+## Advanced Usage
 
-**Parameters:**
-- `sessionId` (string): Unique identifier for the conversation session
-- `message` (object):
-  - `role` ('user' | 'assistant' | 'system'): Message role
-  - `content` (string): Message content
-  - `model` (string, optional): Model used (e.g., 'gpt-4')
-  - `promptTokens` (number, optional): Number of prompt tokens
-  - `completionTokens` (number, optional): Number of completion tokens
-  - `totalTokens` (number, optional): Total tokens used
-  - `latencyMs` (number, optional): Response latency in milliseconds
+### With Properties
 
-### `getMetrics(options)`
+```typescript
+await analytics.track('invoked', {
+  properties: {
+    source: 'suggestion',
+    user_tier: 'premium'
+  }
+});
+```
 
-Get analytics metrics.
+### With Latency Tracking
 
-**Parameters:**
-- `startDate` (Date, optional): Start date for metrics
-- `endDate` (Date, optional): End date for metrics
-- `includeSessions` (boolean, optional): Include recent sessions
+```typescript
+const startTime = Date.now();
+// ... your app logic ...
+const latency = Date.now() - startTime;
 
-### `export(options)`
+await analytics.completed({ latency_ms: latency });
+```
 
-Export analytics data.
+### With Prompt Hashing (Privacy-Safe)
 
-**Parameters:**
-- `format` ('csv' | 'json' | 'pdf'): Export format
-- `startDate` (Date, optional): Start date for export
-- `endDate` (Date, optional): End date for export
+```typescript
+import crypto from 'crypto';
+
+const promptHash = crypto
+  .createHash('sha256')
+  .update(userPrompt)
+  .digest('hex');
+
+await analytics.invoked({ prompt_hash: promptHash });
+```
+
+## Configuration
+
+```typescript
+const analytics = createClient({
+  appKey: 'sk_...',           // Required: Your app write key
+  baseUrl: 'https://...',     // Optional: Custom API URL
+  timeout: 5000               // Optional: Request timeout (ms)
+});
+```
+
+## Error Handling
+
+The SDK fails silently by default to not break your app. Errors are logged to console but won't throw.
+
+## Privacy
+
+- No PII is collected
+- No raw prompts are stored
+- Optional prompt hashing for deduplication
+- All data retention follows your plan tier
+
+## Support
+
+- Documentation: https://your-docs-url
+- Issues: https://github.com/ahyoung93/chatgpt-analytics/issues
 
 ## License
 

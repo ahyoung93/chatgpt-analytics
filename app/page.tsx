@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BarChart3, Zap, Shield, Download } from 'lucide-react';
+import { BarChart3, Zap, Shield, TrendingUp } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -10,7 +10,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-8 h-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">ChatGPT Analytics</span>
+              <span className="text-xl font-bold text-gray-900">ChatGPT App Analytics</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -41,20 +41,20 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Track Your ChatGPT Usage
+            Analytics for Your
             <br />
-            <span className="text-blue-600">Like Never Before</span>
+            <span className="text-blue-600">ChatGPT Apps</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Comprehensive analytics platform for ChatGPT conversations. Monitor costs,
-            track token usage, and gain insights into your AI interactions.
+            Track performance, reliability, and user adoption of your Custom GPTs,
+            Plugins, and MCP servers. Privacy-first analytics with category benchmarks.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Link
               href="/dashboard"
               className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-semibold"
             >
-              Get Started Free
+              Start Free
             </Link>
             <Link
               href="/docs"
@@ -72,22 +72,22 @@ export default function HomePage() {
               <BarChart3 className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Real-time Analytics
+              App Performance
             </h3>
             <p className="text-gray-600">
-              Track every conversation with detailed metrics on tokens, costs, and performance.
+              Track invoked, completed, error, and conversion events for your ChatGPT apps.
             </p>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-              <Zap className="w-6 h-6 text-green-600" />
+              <TrendingUp className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Easy Integration
+              Category Benchmarks
             </h3>
             <p className="text-gray-600">
-              Simple SDK that works with any ChatGPT implementation. Just a few lines of code.
+              Compare your app against others in your category with privacy-protected benchmarks.
             </p>
           </div>
 
@@ -96,37 +96,51 @@ export default function HomePage() {
               <Shield className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Secure & Private
+              Privacy-First
             </h3>
             <p className="text-gray-600">
-              Your data is encrypted and stored securely. Full GDPR compliance.
+              No PII, no raw prompts. K-anonymity protection for benchmarks (≥7 apps required).
             </p>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-              <Download className="w-6 h-6 text-orange-600" />
+              <Zap className="w-6 h-6 text-orange-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Data Export
+              Simple SDK
             </h3>
             <p className="text-gray-600">
-              Export your data in CSV, JSON, or PDF format anytime you need it.
+              Just 3 lines of code. Works with Custom GPTs, Plugins, and MCP servers.
             </p>
           </div>
         </div>
 
+        {/* Code Example */}
+        <div className="mt-24 bg-gray-900 rounded-2xl p-8 text-white">
+          <h2 className="text-2xl font-bold mb-6">Get Started in Seconds</h2>
+          <pre className="bg-black/30 p-6 rounded-lg overflow-x-auto">
+            <code>{`import { createClient } from '@chatgpt-app-analytics/sdk';
+
+const analytics = createClient({ appKey: 'sk_...' });
+
+await analytics.track('invoked');
+await analytics.track('completed', { latency_ms: 1200 });
+await analytics.track('converted', { name: 'purchase' });`}</code>
+          </pre>
+        </div>
+
         {/* CTA Section */}
         <div className="mt-24 bg-blue-600 rounded-2xl p-12 text-center text-white">
-          <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
+          <h2 className="text-3xl font-bold mb-4">Ready to track your ChatGPT app?</h2>
           <p className="text-xl mb-8 text-blue-100">
-            Join thousands of developers tracking their ChatGPT usage
+            Start free with 7 days retention. Upgrade for benchmarks and more.
           </p>
           <Link
             href="/dashboard"
             className="inline-block px-8 py-4 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-lg font-semibold"
           >
-            Start Free Trial
+            Start Free
           </Link>
         </div>
       </div>
@@ -135,7 +149,7 @@ export default function HomePage() {
       <footer className="border-t border-gray-200 mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center text-gray-600">
-            <p>&copy; 2024 ChatGPT Analytics. All rights reserved.</p>
+            <p>&copy; 2024 ChatGPT App Analytics. All rights reserved.</p>
           </div>
         </div>
       </footer>

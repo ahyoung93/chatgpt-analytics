@@ -1,16 +1,22 @@
 {
-  "name": "@chatgpt-analytics/sdk-js",
+  "name": "@chatgpt-app-analytics/sdk",
   "version": "1.0.0",
-  "description": "JavaScript/TypeScript SDK for ChatGPT Analytics",
+  "description": "Official SDK for ChatGPT App Analytics - Track performance of your ChatGPT apps (Custom GPTs, Plugins, MCP servers)",
   "main": "index.ts",
   "types": "index.ts",
   "keywords": [
     "chatgpt",
     "analytics",
     "openai",
-    "tracking",
-    "metrics"
+    "app-analytics",
+    "custom-gpt",
+    "gpt-plugin",
+    "mcp"
   ],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahyoung93/chatgpt-analytics"
+  }
 }

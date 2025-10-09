@@ -1,159 +1,203 @@
--- ChatGPT Analytics Platform Database Schema
--- This script creates all necessary tables, functions, and policies
+-- ChatGPT App Analytics Platform Database Schema
+-- For tracking ChatGPT App performance (not conversation analytics)
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================
--- USERS TABLE
+-- APP CATEGORIES (ENUM)
 -- ============================================
-CREATE TABLE IF NOT EXISTS users (
+CREATE TYPE app_category AS ENUM (
+    'travel',
+    'productivity',
+    'dev_tools',
+    'shopping',
+    'education',
+    'entertainment',
+    'customer_support',
+    'content_generation',
+    'data_analysis',
+    'other'
+);
+
+-- ============================================
+-- EVENT TYPES (ENUM)
+-- ============================================
+CREATE TYPE event_type AS ENUM (
+    'invoked',      -- App was called
+    'completed',    -- App succeeded
+    'error',        -- App failed
+    'converted',    -- User achieved goal
+    'custom'        -- Developer-defined event
+);
+
+-- ============================================
+-- PLAN TIERS (ENUM)
+-- ============================================
+CREATE TYPE plan_tier AS ENUM (
+    'free',         -- 7 days retention, 1 app
+    'pro',          -- 90 days retention, 5 apps, benchmarks, CSV
+    'team'          -- 180 days retention, unlimited apps
+);
+
+-- ============================================
+-- ORGANIZATIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS orgs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email TEXT UNIQUE NOT NULL,
-    name TEXT,
-    avatar_url TEXT,
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    plan plan_tier DEFAULT 'free' NOT NULL,
     stripe_customer_id TEXT UNIQUE,
-    subscription_tier TEXT DEFAULT 'free' CHECK (subscription_tier IN ('free', 'pro', 'enterprise')),
-    subscription_status TEXT DEFAULT 'inactive' CHECK (subscription_status IN ('active', 'inactive', 'cancelled', 'past_due')),
     subscription_id TEXT,
-    api_key TEXT UNIQUE DEFAULT encode(gen_random_bytes(32), 'base64'),
-    api_calls_limit INTEGER DEFAULT 1000,
-    api_calls_used INTEGER DEFAULT 0,
-    api_calls_reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '1 month',
+    subscription_status TEXT DEFAULT 'inactive' CHECK (subscription_status IN ('active', 'inactive', 'cancelled', 'past_due')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ============================================
--- CHAT_SESSIONS TABLE
+-- ORG MEMBERS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS chat_sessions (
+CREATE TABLE IF NOT EXISTS org_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    session_id TEXT NOT NULL,
-    title TEXT,
-    model TEXT,
-    total_tokens INTEGER DEFAULT 0,
-    total_cost DECIMAL(10, 6) DEFAULT 0,
-    message_count INTEGER DEFAULT 0,
-    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    ended_at TIMESTAMP WITH TIME ZONE,
-    metadata JSONB DEFAULT '{}',
+    org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    name TEXT,
+    role TEXT DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member')),
+    invited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    joined_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, session_id)
+    UNIQUE(org_id, email)
 );
 
 -- ============================================
--- CHAT_MESSAGES TABLE
+-- APPS TABLE (Developer's ChatGPT Apps)
 -- ============================================
-CREATE TABLE IF NOT EXISTS chat_messages (
+CREATE TABLE IF NOT EXISTS apps (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
-    content TEXT NOT NULL,
-    model TEXT,
-    prompt_tokens INTEGER DEFAULT 0,
-    completion_tokens INTEGER DEFAULT 0,
-    total_tokens INTEGER DEFAULT 0,
-    cost DECIMAL(10, 6) DEFAULT 0,
+    org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    category app_category NOT NULL,
+    description TEXT,
+    write_key TEXT UNIQUE NOT NULL DEFAULT 'sk_' || encode(gen_random_bytes(32), 'hex'),
+    rate_limit_per_sec INTEGER DEFAULT 10,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(org_id, name)
+);
+
+-- ============================================
+-- EVENTS TABLE (Raw event data)
+-- ============================================
+CREATE TABLE IF NOT EXISTS events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    app_id UUID NOT NULL REFERENCES apps(id) ON DELETE CASCADE,
+    event_type event_type NOT NULL,
+    event_name TEXT,
+    properties JSONB DEFAULT '{}',
+    prompt_hash TEXT,  -- Optional: SHA-256 hash of prompt for deduplication
+    error_message TEXT,
     latency_ms INTEGER,
-    metadata JSONB DEFAULT '{}',
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ============================================
--- USAGE_METRICS TABLE (Aggregated Daily Stats)
+-- APP DAILY METRICS TABLE (Aggregated stats)
 -- ============================================
-CREATE TABLE IF NOT EXISTS usage_metrics (
+CREATE TABLE IF NOT EXISTS app_daily_metrics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    app_id UUID NOT NULL REFERENCES apps(id) ON DELETE CASCADE,
     date DATE NOT NULL,
-    total_sessions INTEGER DEFAULT 0,
-    total_messages INTEGER DEFAULT 0,
-    total_tokens INTEGER DEFAULT 0,
-    total_cost DECIMAL(10, 6) DEFAULT 0,
+    invoked_count INTEGER DEFAULT 0,
+    completed_count INTEGER DEFAULT 0,
+    error_count INTEGER DEFAULT 0,
+    converted_count INTEGER DEFAULT 0,
+    custom_count INTEGER DEFAULT 0,
+    total_events INTEGER DEFAULT 0,
     avg_latency_ms INTEGER,
-    models_used JSONB DEFAULT '{}',
+    success_rate DECIMAL(5, 2),  -- Percentage
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, date)
+    UNIQUE(app_id, date)
 );
 
 -- ============================================
--- BILLING_HISTORY TABLE
+-- CATEGORY DAILY BENCHMARKS TABLE
+-- (Privacy-protected with k-anonymity ≥7)
 -- ============================================
-CREATE TABLE IF NOT EXISTS billing_history (
+CREATE TABLE IF NOT EXISTS category_daily_benchmarks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    stripe_invoice_id TEXT UNIQUE,
-    amount DECIMAL(10, 2) NOT NULL,
-    currency TEXT DEFAULT 'usd',
-    status TEXT NOT NULL CHECK (status IN ('pending', 'paid', 'failed', 'refunded')),
-    invoice_url TEXT,
-    period_start TIMESTAMP WITH TIME ZONE,
-    period_end TIMESTAMP WITH TIME ZONE,
+    category app_category NOT NULL,
+    date DATE NOT NULL,
+    app_count INTEGER NOT NULL,  -- Must be ≥7 for k-anonymity
+    avg_invoked_count DECIMAL(10, 2),
+    avg_completed_count DECIMAL(10, 2),
+    avg_error_count DECIMAL(10, 2),
+    avg_success_rate DECIMAL(5, 2),
+    avg_latency_ms INTEGER,
+    p50_success_rate DECIMAL(5, 2),
+    p75_success_rate DECIMAL(5, 2),
+    p90_success_rate DECIMAL(5, 2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(category, date)
+);
+
+-- ============================================
+-- STRIPE CUSTOMERS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS stripe_customers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE UNIQUE,
+    stripe_customer_id TEXT UNIQUE NOT NULL,
+    email TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ============================================
--- API_LOGS TABLE
+-- SUBSCRIPTIONS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS api_logs (
+CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    endpoint TEXT NOT NULL,
-    method TEXT NOT NULL,
-    status_code INTEGER,
-    response_time_ms INTEGER,
-    ip_address TEXT,
-    user_agent TEXT,
-    error_message TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- ============================================
--- EXPORTS TABLE
--- ============================================
-CREATE TABLE IF NOT EXISTS exports (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    format TEXT NOT NULL CHECK (format IN ('csv', 'json', 'pdf')),
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
-    file_url TEXT,
-    file_size INTEGER,
-    expires_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '7 days',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE UNIQUE,
+    stripe_subscription_id TEXT UNIQUE NOT NULL,
+    plan plan_tier NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('active', 'cancelled', 'past_due', 'trialing')),
+    current_period_start TIMESTAMP WITH TIME ZONE,
+    current_period_end TIMESTAMP WITH TIME ZONE,
+    cancel_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ============================================
 -- INDEXES
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key);
-CREATE INDEX IF NOT EXISTS idx_users_stripe_customer_id ON users(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_orgs_slug ON orgs(slug);
+CREATE INDEX IF NOT EXISTS idx_orgs_stripe_customer_id ON orgs(stripe_customer_id);
 
-CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_chat_sessions_session_id ON chat_sessions(session_id);
-CREATE INDEX IF NOT EXISTS idx_chat_sessions_started_at ON chat_sessions(started_at);
+CREATE INDEX IF NOT EXISTS idx_org_members_org_id ON org_members(org_id);
+CREATE INDEX IF NOT EXISTS idx_org_members_email ON org_members(email);
 
-CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
-CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON chat_messages(user_id);
-CREATE INDEX IF NOT EXISTS idx_chat_messages_timestamp ON chat_messages(timestamp);
+CREATE INDEX IF NOT EXISTS idx_apps_org_id ON apps(org_id);
+CREATE INDEX IF NOT EXISTS idx_apps_write_key ON apps(write_key);
+CREATE INDEX IF NOT EXISTS idx_apps_category ON apps(category);
 
-CREATE INDEX IF NOT EXISTS idx_usage_metrics_user_id ON usage_metrics(user_id);
-CREATE INDEX IF NOT EXISTS idx_usage_metrics_date ON usage_metrics(date);
+CREATE INDEX IF NOT EXISTS idx_events_app_id ON events(app_id);
+CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_events_event_type ON events(event_type);
+CREATE INDEX IF NOT EXISTS idx_events_app_id_timestamp ON events(app_id, timestamp);
 
-CREATE INDEX IF NOT EXISTS idx_billing_history_user_id ON billing_history(user_id);
-CREATE INDEX IF NOT EXISTS idx_billing_history_stripe_invoice_id ON billing_history(stripe_invoice_id);
+CREATE INDEX IF NOT EXISTS idx_app_daily_metrics_app_id ON app_daily_metrics(app_id);
+CREATE INDEX IF NOT EXISTS idx_app_daily_metrics_date ON app_daily_metrics(date);
+CREATE INDEX IF NOT EXISTS idx_app_daily_metrics_app_id_date ON app_daily_metrics(app_id, date);
 
-CREATE INDEX IF NOT EXISTS idx_api_logs_user_id ON api_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_api_logs_created_at ON api_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_category_daily_benchmarks_category ON category_daily_benchmarks(category);
+CREATE INDEX IF NOT EXISTS idx_category_daily_benchmarks_date ON category_daily_benchmarks(date);
 
-CREATE INDEX IF NOT EXISTS idx_exports_user_id ON exports(user_id);
-CREATE INDEX IF NOT EXISTS idx_exports_status ON exports(status);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_org_id ON subscriptions(org_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_id ON subscriptions(stripe_subscription_id);
 
 -- ============================================
 -- FUNCTIONS
@@ -168,52 +212,157 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to aggregate daily metrics
-CREATE OR REPLACE FUNCTION aggregate_daily_metrics(target_user_id UUID, target_date DATE)
+-- Function to aggregate daily app metrics
+CREATE OR REPLACE FUNCTION aggregate_app_daily_metrics(target_app_id UUID, target_date DATE)
 RETURNS VOID AS $$
 BEGIN
-    INSERT INTO usage_metrics (user_id, date, total_sessions, total_messages, total_tokens, total_cost, avg_latency_ms, models_used)
+    INSERT INTO app_daily_metrics (
+        app_id,
+        date,
+        invoked_count,
+        completed_count,
+        error_count,
+        converted_count,
+        custom_count,
+        total_events,
+        avg_latency_ms,
+        success_rate
+    )
     SELECT
-        target_user_id,
+        target_app_id,
         target_date,
-        COUNT(DISTINCT cs.id) as total_sessions,
-        COUNT(cm.id) as total_messages,
-        COALESCE(SUM(cm.total_tokens), 0) as total_tokens,
-        COALESCE(SUM(cm.cost), 0) as total_cost,
-        COALESCE(AVG(cm.latency_ms)::INTEGER, 0) as avg_latency_ms,
-        COALESCE(
-            jsonb_object_agg(
-                cm.model,
-                COUNT(*)
-            ) FILTER (WHERE cm.model IS NOT NULL),
-            '{}'::jsonb
-        ) as models_used
-    FROM chat_sessions cs
-    LEFT JOIN chat_messages cm ON cs.id = cm.session_id
-    WHERE cs.user_id = target_user_id
-        AND DATE(cm.timestamp) = target_date
-    GROUP BY target_user_id, target_date
-    ON CONFLICT (user_id, date)
+        COUNT(*) FILTER (WHERE event_type = 'invoked') as invoked_count,
+        COUNT(*) FILTER (WHERE event_type = 'completed') as completed_count,
+        COUNT(*) FILTER (WHERE event_type = 'error') as error_count,
+        COUNT(*) FILTER (WHERE event_type = 'converted') as converted_count,
+        COUNT(*) FILTER (WHERE event_type = 'custom') as custom_count,
+        COUNT(*) as total_events,
+        AVG(latency_ms)::INTEGER as avg_latency_ms,
+        CASE
+            WHEN COUNT(*) FILTER (WHERE event_type IN ('invoked', 'completed', 'error')) > 0
+            THEN (COUNT(*) FILTER (WHERE event_type = 'completed')::DECIMAL /
+                  NULLIF(COUNT(*) FILTER (WHERE event_type IN ('invoked', 'completed', 'error')), 0) * 100)
+            ELSE 0
+        END as success_rate
+    FROM events
+    WHERE app_id = target_app_id
+        AND DATE(timestamp) = target_date
+    ON CONFLICT (app_id, date)
     DO UPDATE SET
-        total_sessions = EXCLUDED.total_sessions,
-        total_messages = EXCLUDED.total_messages,
-        total_tokens = EXCLUDED.total_tokens,
-        total_cost = EXCLUDED.total_cost,
+        invoked_count = EXCLUDED.invoked_count,
+        completed_count = EXCLUDED.completed_count,
+        error_count = EXCLUDED.error_count,
+        converted_count = EXCLUDED.converted_count,
+        custom_count = EXCLUDED.custom_count,
+        total_events = EXCLUDED.total_events,
         avg_latency_ms = EXCLUDED.avg_latency_ms,
-        models_used = EXCLUDED.models_used,
+        success_rate = EXCLUDED.success_rate,
         updated_at = NOW();
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to reset API call limits monthly
-CREATE OR REPLACE FUNCTION reset_api_limits()
+-- Function to aggregate category benchmarks (with k-anonymity)
+CREATE OR REPLACE FUNCTION aggregate_category_benchmarks(target_category app_category, target_date DATE)
+RETURNS VOID AS $$
+DECLARE
+    app_count_in_category INTEGER;
+BEGIN
+    -- Count apps in category with data on target date
+    SELECT COUNT(DISTINCT m.app_id)
+    INTO app_count_in_category
+    FROM app_daily_metrics m
+    JOIN apps a ON m.app_id = a.id
+    WHERE a.category = target_category
+        AND m.date = target_date;
+
+    -- Only aggregate if k-anonymity requirement met (≥7 apps)
+    IF app_count_in_category >= 7 THEN
+        INSERT INTO category_daily_benchmarks (
+            category,
+            date,
+            app_count,
+            avg_invoked_count,
+            avg_completed_count,
+            avg_error_count,
+            avg_success_rate,
+            avg_latency_ms,
+            p50_success_rate,
+            p75_success_rate,
+            p90_success_rate
+        )
+        SELECT
+            target_category,
+            target_date,
+            app_count_in_category,
+            AVG(m.invoked_count) as avg_invoked_count,
+            AVG(m.completed_count) as avg_completed_count,
+            AVG(m.error_count) as avg_error_count,
+            AVG(m.success_rate) as avg_success_rate,
+            AVG(m.avg_latency_ms)::INTEGER as avg_latency_ms,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY m.success_rate) as p50_success_rate,
+            PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY m.success_rate) as p75_success_rate,
+            PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY m.success_rate) as p90_success_rate
+        FROM app_daily_metrics m
+        JOIN apps a ON m.app_id = a.id
+        WHERE a.category = target_category
+            AND m.date = target_date
+        ON CONFLICT (category, date)
+        DO UPDATE SET
+            app_count = EXCLUDED.app_count,
+            avg_invoked_count = EXCLUDED.avg_invoked_count,
+            avg_completed_count = EXCLUDED.avg_completed_count,
+            avg_error_count = EXCLUDED.avg_error_count,
+            avg_success_rate = EXCLUDED.avg_success_rate,
+            avg_latency_ms = EXCLUDED.avg_latency_ms,
+            p50_success_rate = EXCLUDED.p50_success_rate,
+            p75_success_rate = EXCLUDED.p75_success_rate,
+            p90_success_rate = EXCLUDED.p90_success_rate,
+            created_at = NOW();
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to check if org can create more apps based on plan
+CREATE OR REPLACE FUNCTION can_create_app(org_uuid UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    org_plan plan_tier;
+    current_app_count INTEGER;
+BEGIN
+    SELECT plan INTO org_plan FROM orgs WHERE id = org_uuid;
+    SELECT COUNT(*) INTO current_app_count FROM apps WHERE org_id = org_uuid;
+
+    CASE org_plan
+        WHEN 'free' THEN RETURN current_app_count < 1;
+        WHEN 'pro' THEN RETURN current_app_count < 5;
+        WHEN 'team' THEN RETURN true;  -- Unlimited
+        ELSE RETURN false;
+    END CASE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get data retention days for plan
+CREATE OR REPLACE FUNCTION get_retention_days(org_plan plan_tier)
+RETURNS INTEGER AS $$
+BEGIN
+    CASE org_plan
+        WHEN 'free' THEN RETURN 7;
+        WHEN 'pro' THEN RETURN 90;
+        WHEN 'team' THEN RETURN 180;
+        ELSE RETURN 7;
+    END CASE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to clean up old events based on org plan
+CREATE OR REPLACE FUNCTION cleanup_old_events()
 RETURNS VOID AS $$
 BEGIN
-    UPDATE users
-    SET
-        api_calls_used = 0,
-        api_calls_reset_at = NOW() + INTERVAL '1 month'
-    WHERE api_calls_reset_at <= NOW();
+    DELETE FROM events e
+    USING apps a, orgs o
+    WHERE e.app_id = a.id
+        AND a.org_id = o.id
+        AND e.timestamp < NOW() - (get_retention_days(o.plan) || ' days')::INTERVAL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -221,24 +370,31 @@ $$ LANGUAGE plpgsql;
 -- TRIGGERS
 -- ============================================
 
--- Auto-update updated_at for users
-DROP TRIGGER IF EXISTS update_users_updated_at ON users;
-CREATE TRIGGER update_users_updated_at
-    BEFORE UPDATE ON users
+-- Auto-update updated_at for orgs
+DROP TRIGGER IF EXISTS update_orgs_updated_at ON orgs;
+CREATE TRIGGER update_orgs_updated_at
+    BEFORE UPDATE ON orgs
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Auto-update updated_at for chat_sessions
-DROP TRIGGER IF EXISTS update_chat_sessions_updated_at ON chat_sessions;
-CREATE TRIGGER update_chat_sessions_updated_at
-    BEFORE UPDATE ON chat_sessions
+-- Auto-update updated_at for apps
+DROP TRIGGER IF EXISTS update_apps_updated_at ON apps;
+CREATE TRIGGER update_apps_updated_at
+    BEFORE UPDATE ON apps
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Auto-update updated_at for usage_metrics
-DROP TRIGGER IF EXISTS update_usage_metrics_updated_at ON usage_metrics;
-CREATE TRIGGER update_usage_metrics_updated_at
-    BEFORE UPDATE ON usage_metrics
+-- Auto-update updated_at for app_daily_metrics
+DROP TRIGGER IF EXISTS update_app_daily_metrics_updated_at ON app_daily_metrics;
+CREATE TRIGGER update_app_daily_metrics_updated_at
+    BEFORE UPDATE ON app_daily_metrics
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Auto-update updated_at for subscriptions
+DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;
+CREATE TRIGGER update_subscriptions_updated_at
+    BEFORE UPDATE ON subscriptions
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
@@ -247,71 +403,91 @@ CREATE TRIGGER update_usage_metrics_updated_at
 -- ============================================
 
 -- Enable RLS on all tables
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE chat_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE usage_metrics ENABLE ROW LEVEL SECURITY;
-ALTER TABLE billing_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE api_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE exports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orgs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE org_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE apps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_daily_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE category_daily_benchmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Users can only read their own data
-CREATE POLICY users_select_own ON users
-    FOR SELECT USING (auth.uid() = id);
+-- Orgs: Members can read their own org
+CREATE POLICY orgs_select_member ON orgs
+    FOR SELECT USING (
+        id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+    );
 
-CREATE POLICY users_update_own ON users
-    FOR UPDATE USING (auth.uid() = id);
+-- Org members: Can read members of own org
+CREATE POLICY org_members_select_own ON org_members
+    FOR SELECT USING (
+        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+    );
 
--- Chat sessions policies
-CREATE POLICY chat_sessions_select_own ON chat_sessions
-    FOR SELECT USING (auth.uid() = user_id);
+-- Apps: Members can manage apps in their org
+CREATE POLICY apps_select_own_org ON apps
+    FOR SELECT USING (
+        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+    );
 
-CREATE POLICY chat_sessions_insert_own ON chat_sessions
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY apps_insert_own_org ON apps
+    FOR INSERT WITH CHECK (
+        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+    );
 
-CREATE POLICY chat_sessions_update_own ON chat_sessions
-    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY apps_update_own_org ON apps
+    FOR UPDATE USING (
+        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+    );
 
--- Chat messages policies
-CREATE POLICY chat_messages_select_own ON chat_messages
-    FOR SELECT USING (auth.uid() = user_id);
+-- Events: Members can read events for their apps
+CREATE POLICY events_select_own_apps ON events
+    FOR SELECT USING (
+        app_id IN (
+            SELECT a.id FROM apps a
+            JOIN org_members om ON a.org_id = om.org_id
+            WHERE om.email = current_setting('app.user_email', true)
+        )
+    );
 
-CREATE POLICY chat_messages_insert_own ON chat_messages
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- App daily metrics: Members can read metrics for their apps
+CREATE POLICY app_daily_metrics_select_own ON app_daily_metrics
+    FOR SELECT USING (
+        app_id IN (
+            SELECT a.id FROM apps a
+            JOIN org_members om ON a.org_id = om.org_id
+            WHERE om.email = current_setting('app.user_email', true)
+        )
+    );
 
--- Usage metrics policies
-CREATE POLICY usage_metrics_select_own ON usage_metrics
-    FOR SELECT USING (auth.uid() = user_id);
+-- Category benchmarks: Pro/Team plan members can read (k-anonymity enforced in function)
+CREATE POLICY category_benchmarks_select_pro_team ON category_daily_benchmarks
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM orgs o
+            JOIN org_members om ON o.id = om.org_id
+            WHERE om.email = current_setting('app.user_email', true)
+                AND o.plan IN ('pro', 'team')
+        )
+    );
 
--- Billing history policies
-CREATE POLICY billing_history_select_own ON billing_history
-    FOR SELECT USING (auth.uid() = user_id);
-
--- API logs policies
-CREATE POLICY api_logs_select_own ON api_logs
-    FOR SELECT USING (auth.uid() = user_id);
-
--- Exports policies
-CREATE POLICY exports_select_own ON exports
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY exports_insert_own ON exports
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY exports_update_own ON exports
-    FOR UPDATE USING (auth.uid() = user_id);
+-- Subscriptions: Members can read their org's subscription
+CREATE POLICY subscriptions_select_own_org ON subscriptions
+    FOR SELECT USING (
+        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+    );
 
 -- ============================================
--- INITIAL DATA / SEED
+-- COMMENTS
 -- ============================================
 
--- Create a sample free tier configuration
--- (This can be customized based on your pricing model)
+COMMENT ON TABLE orgs IS 'Organizations (teams) that own ChatGPT apps';
+COMMENT ON TABLE org_members IS 'Team members with access to org';
+COMMENT ON TABLE apps IS 'ChatGPT apps being tracked (Custom GPTs, Plugins, MCP servers)';
+COMMENT ON TABLE events IS 'Raw event data: invoked, completed, error, converted, custom';
+COMMENT ON TABLE app_daily_metrics IS 'Aggregated daily metrics per app';
+COMMENT ON TABLE category_daily_benchmarks IS 'Privacy-protected category benchmarks (k-anonymity ≥7)';
+COMMENT ON TABLE subscriptions IS 'Stripe subscription information';
 
-COMMENT ON TABLE users IS 'Stores user accounts and subscription information';
-COMMENT ON TABLE chat_sessions IS 'Stores ChatGPT conversation sessions';
-COMMENT ON TABLE chat_messages IS 'Stores individual messages within chat sessions';
-COMMENT ON TABLE usage_metrics IS 'Aggregated daily usage metrics for analytics';
-COMMENT ON TABLE billing_history IS 'Stripe billing and invoice history';
-COMMENT ON TABLE api_logs IS 'API request logs for monitoring and debugging';
-COMMENT ON TABLE exports IS 'Data export requests and status';
+COMMENT ON COLUMN apps.write_key IS 'API key for /api/track endpoint (x-app-key header)';
+COMMENT ON COLUMN events.prompt_hash IS 'Optional SHA-256 hash for deduplication (no PII)';
+COMMENT ON COLUMN category_daily_benchmarks.app_count IS 'Must be ≥7 for k-anonymity protection';

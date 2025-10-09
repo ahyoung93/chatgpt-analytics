@@ -1,158 +1,160 @@
-// Metrics calculation utilities
+// Metrics calculation for ChatGPT App Analytics
 import { createServerClient } from './db';
+import { AppCategory } from './database.types';
 
-export interface MetricsResponse {
-  totalSessions: number;
-  totalMessages: number;
-  totalTokens: number;
-  totalCost: number;
+export interface AppMetricsSummary {
+  totalEvents: number;
+  invokedCount: number;
+  completedCount: number;
+  errorCount: number;
+  convertedCount: number;
+  successRate: number;
   avgLatency: number;
-  modelBreakdown: Record<string, number>;
-  timeSeriesData: Array<{
-    date: string;
-    sessions: number;
-    messages: number;
-    tokens: number;
-    cost: number;
-  }>;
 }
 
-// Get metrics for a user within a date range
-export async function getUserMetrics(
-  userId: string,
+export interface TimeSeriesData {
+  date: string;
+  invoked: number;
+  completed: number;
+  error: number;
+  converted: number;
+  success_rate: number;
+}
+
+// Get summary metrics for an app
+export async function getAppMetricsSummary(
+  appId: string,
   startDate: Date,
   endDate: Date
-): Promise<MetricsResponse> {
+): Promise<AppMetricsSummary> {
   const supabase = createServerClient();
 
-  // Get aggregated metrics from usage_metrics table
-  const { data: metrics, error: metricsError } = await supabase
-    .from('usage_metrics')
+  const { data, error } = await supabase
+    .from('app_daily_metrics')
     .select('*')
-    .eq('user_id', userId)
+    .eq('app_id', appId)
+    .gte('date', startDate.toISOString().split('T')[0])
+    .lte('date', endDate.toISOString().split('T')[0]);
+
+  if (error || !data) {
+    return {
+      totalEvents: 0,
+      invokedCount: 0,
+      completedCount: 0,
+      errorCount: 0,
+      convertedCount: 0,
+      successRate: 0,
+      avgLatency: 0
+    };
+  }
+
+  const totalEvents = data.reduce((sum, d) => sum + d.total_events, 0);
+  const invokedCount = data.reduce((sum, d) => sum + d.invoked_count, 0);
+  const completedCount = data.reduce((sum, d) => sum + d.completed_count, 0);
+  const errorCount = data.reduce((sum, d) => sum + d.error_count, 0);
+  const convertedCount = data.reduce((sum, d) => sum + d.converted_count, 0);
+
+  const successRate = invokedCount > 0
+    ? (completedCount / invokedCount) * 100
+    : 0;
+
+  const latencies = data
+    .filter(d => d.avg_latency_ms)
+    .map(d => d.avg_latency_ms!);
+  const avgLatency = latencies.length > 0
+    ? Math.round(latencies.reduce((sum, l) => sum + l, 0) / latencies.length)
+    : 0;
+
+  return {
+    totalEvents,
+    invokedCount,
+    completedCount,
+    errorCount,
+    convertedCount,
+    successRate: Math.round(successRate * 100) / 100,
+    avgLatency
+  };
+}
+
+// Get time series data for charts
+export async function getAppTimeSeriesData(
+  appId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<TimeSeriesData[]> {
+  const supabase = createServerClient();
+
+  const { data, error } = await supabase
+    .from('app_daily_metrics')
+    .select('*')
+    .eq('app_id', appId)
     .gte('date', startDate.toISOString().split('T')[0])
     .lte('date', endDate.toISOString().split('T')[0])
     .order('date', { ascending: true });
 
-  if (metricsError) {
-    throw new Error('Failed to fetch metrics');
+  if (error || !data) {
+    return [];
   }
 
-  // Aggregate the data
-  const totalSessions = metrics.reduce((sum, m) => sum + m.total_sessions, 0);
-  const totalMessages = metrics.reduce((sum, m) => sum + m.total_messages, 0);
-  const totalTokens = metrics.reduce((sum, m) => sum + m.total_tokens, 0);
-  const totalCost = metrics.reduce((sum, m) => sum + parseFloat(m.total_cost.toString()), 0);
-
-  // Calculate average latency
-  const latencies = metrics
-    .map(m => m.avg_latency_ms)
-    .filter(l => l !== null) as number[];
-  const avgLatency = latencies.length > 0
-    ? latencies.reduce((sum, l) => sum + l, 0) / latencies.length
-    : 0;
-
-  // Aggregate model breakdown
-  const modelBreakdown: Record<string, number> = {};
-  metrics.forEach(m => {
-    const models = m.models_used as Record<string, number>;
-    Object.entries(models).forEach(([model, count]) => {
-      modelBreakdown[model] = (modelBreakdown[model] || 0) + count;
-    });
-  });
-
-  // Prepare time series data
-  const timeSeriesData = metrics.map(m => ({
-    date: m.date,
-    sessions: m.total_sessions,
-    messages: m.total_messages,
-    tokens: m.total_tokens,
-    cost: parseFloat(m.total_cost.toString())
+  return data.map(d => ({
+    date: d.date,
+    invoked: d.invoked_count,
+    completed: d.completed_count,
+    error: d.error_count,
+    converted: d.converted_count,
+    success_rate: d.success_rate || 0
   }));
-
-  return {
-    totalSessions,
-    totalMessages,
-    totalTokens,
-    totalCost,
-    avgLatency: Math.round(avgLatency),
-    modelBreakdown,
-    timeSeriesData
-  };
 }
 
-// Get recent sessions for a user
-export async function getRecentSessions(userId: string, limit = 10) {
+// Get category benchmarks (with k-anonymity check)
+export async function getCategoryBenchmarks(
+  category: AppCategory,
+  startDate: Date,
+  endDate: Date
+) {
   const supabase = createServerClient();
 
-  const { data: sessions, error } = await supabase
-    .from('chat_sessions')
+  const { data, error } = await supabase
+    .from('category_daily_benchmarks')
     .select('*')
-    .eq('user_id', userId)
-    .order('started_at', { ascending: false })
-    .limit(limit);
+    .eq('category', category)
+    .gte('date', startDate.toISOString().split('T')[0])
+    .lte('date', endDate.toISOString().split('T')[0])
+    .gte('app_count', 7) // K-anonymity: only show if ≥7 apps
+    .order('date', { ascending: true });
 
-  if (error) {
-    throw new Error('Failed to fetch sessions');
+  if (error || !data || data.length === 0) {
+    return {
+      available: false,
+      message: 'Not enough data to show category benchmarks (requires ≥7 apps for privacy)'
+    };
   }
 
-  return sessions;
-}
-
-// Get session details with messages
-export async function getSessionDetails(userId: string, sessionId: string) {
-  const supabase = createServerClient();
-
-  const { data: session, error: sessionError } = await supabase
-    .from('chat_sessions')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('id', sessionId)
-    .single();
-
-  if (sessionError) {
-    throw new Error('Session not found');
-  }
-
-  const { data: messages, error: messagesError } = await supabase
-    .from('chat_messages')
-    .select('*')
-    .eq('session_id', sessionId)
-    .order('timestamp', { ascending: true });
-
-  if (messagesError) {
-    throw new Error('Failed to fetch messages');
-  }
+  const latest = data[data.length - 1];
 
   return {
-    session,
-    messages
+    available: true,
+    category,
+    appCount: latest.app_count,
+    avgSuccessRate: latest.avg_success_rate,
+    p50SuccessRate: latest.p50_success_rate,
+    p75SuccessRate: latest.p75_success_rate,
+    p90SuccessRate: latest.p90_success_rate,
+    avgLatencyMs: latest.avg_latency_ms,
+    timeSeries: data.map(d => ({
+      date: d.date,
+      avgSuccessRate: d.avg_success_rate,
+      avgLatencyMs: d.avg_latency_ms
+    }))
   };
 }
 
-// Calculate token cost based on model
-export function calculateCost(model: string, promptTokens: number, completionTokens: number): number {
-  // Pricing as of 2024 (per 1M tokens)
-  const pricing: Record<string, { prompt: number; completion: number }> = {
-    'gpt-4': { prompt: 30, completion: 60 },
-    'gpt-4-turbo': { prompt: 10, completion: 30 },
-    'gpt-4o': { prompt: 5, completion: 15 },
-    'gpt-3.5-turbo': { prompt: 0.5, completion: 1.5 },
-    'claude-3-opus': { prompt: 15, completion: 75 },
-    'claude-3-sonnet': { prompt: 3, completion: 15 },
-    'claude-3-haiku': { prompt: 0.25, completion: 1.25 },
-  };
+// Aggregate metrics for a specific date
+export async function aggregateMetrics(appId: string, date: Date) {
+  const supabase = createServerClient();
 
-  // Find matching model (case-insensitive, partial match)
-  const modelKey = Object.keys(pricing).find(key =>
-    model.toLowerCase().includes(key.toLowerCase())
-  );
-
-  if (!modelKey) {
-    // Default to GPT-3.5 pricing if model not found
-    return ((promptTokens * 0.5) + (completionTokens * 1.5)) / 1_000_000;
-  }
-
-  const { prompt, completion } = pricing[modelKey];
-  return ((promptTokens * prompt) + (completionTokens * completion)) / 1_000_000;
+  await supabase.rpc('aggregate_app_daily_metrics', {
+    target_app_id: appId,
+    target_date: date.toISOString().split('T')[0]
+  });
 }

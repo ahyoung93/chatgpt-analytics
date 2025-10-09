@@ -1,119 +1,57 @@
-// API route for data export
+// POST /api/export - Generate CSV export (Pro/Team only)
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateRequest, hasAccess, getTierLimits } from '@/lib/auth';
-import { createExport, getExportStatus } from '@/lib/export';
-import { logApiCall } from '@/lib/db';
+import { hasFeatureAccess } from '@/lib/auth';
+import { generateCSVExport } from '@/lib/export';
 import { z } from 'zod';
 
 const exportRequestSchema = z.object({
-  format: z.enum(['csv', 'json', 'pdf']),
+  appId: z.string(),
   startDate: z.string().optional(),
-  endDate: z.string().optional()
+  endDate: z.string().optional(),
+  plan: z.enum(['free', 'pro', 'team'])
 });
 
-// Create export
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-
   try {
-    const { user, error: authError } = await authenticateRequest(request);
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: authError || 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
-    const { format, startDate, endDate } = exportRequestSchema.parse(body);
+    const { appId, startDate, endDate, plan } = exportRequestSchema.parse(body);
 
-    // Check if user has access to this export format
-    const tierLimits = getTierLimits(user.subscription_tier);
-    if (!tierLimits.exportFormats.includes(format)) {
+    // Check if user has CSV export feature
+    if (!hasFeatureAccess(plan, 'csv_export')) {
       return NextResponse.json(
         {
-          error: 'Export format not available in your plan',
-          availableFormats: tierLimits.exportFormats,
-          currentTier: user.subscription_tier
+          error: 'CSV export not available',
+          message: 'Upgrade to Pro or Team plan to export data as CSV'
         },
         { status: 403 }
       );
     }
 
-    // Default to last 30 days
     const end = endDate ? new Date(endDate) : new Date();
     const start = startDate
       ? new Date(startDate)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    // Create export (this will process in background in production)
-    const exportId = await createExport(user.id, format, start, end);
+    const csvData = await generateCSVExport(appId, start, end);
 
-    await logApiCall(
-      user.id,
-      '/api/export',
-      'POST',
-      200,
-      Date.now() - startTime,
-      request.headers.get('x-forwarded-for') || undefined,
-      request.headers.get('user-agent') || undefined
-    );
-
-    return NextResponse.json({
-      success: true,
-      exportId,
-      message: 'Export created successfully'
+    return new NextResponse(csvData, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': `attachment; filename="app-analytics-${appId}-${Date.now()}.csv"`
+      }
     });
   } catch (error: any) {
     console.error('Export API error:', error);
 
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error.message
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// Get export status
-export async function GET(request: NextRequest) {
-  try {
-    const { user, error: authError } = await authenticateRequest(request);
-
-    if (authError || !user) {
+    if (error.name === 'ZodError') {
       return NextResponse.json(
-        { error: authError || 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const searchParams = request.nextUrl.searchParams;
-    const exportId = searchParams.get('exportId');
-
-    if (!exportId) {
-      return NextResponse.json(
-        { error: 'Export ID is required' },
+        { error: 'Invalid request body', details: error.errors },
         { status: 400 }
       );
     }
 
-    const exportData = await getExportStatus(user.id, exportId);
-
-    return NextResponse.json({
-      success: true,
-      export: exportData
-    });
-  } catch (error: any) {
-    console.error('Export status API error:', error);
-
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error.message
-      },
+      { error: 'Internal server error', message: error.message },
       { status: 500 }
     );
   }

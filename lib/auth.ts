@@ -1,131 +1,81 @@
-// Authentication utilities
-import { createServerClient } from './db';
+// Authentication utilities for ChatGPT App Analytics
 import { NextRequest } from 'next/server';
+import { getAppByWriteKey } from './db';
 
-export interface AuthUser {
+export interface AuthenticatedApp {
   id: string;
-  email: string;
-  name?: string;
-  subscription_tier: 'free' | 'pro' | 'enterprise';
-  subscription_status: 'active' | 'inactive' | 'cancelled' | 'past_due';
+  name: string;
+  category: string;
+  org_id: string;
+  org_name: string;
+  org_plan: 'free' | 'pro' | 'team';
+  rate_limit_per_sec: number;
 }
 
-// Authenticate user by API key from request headers
-export async function authenticateRequest(
+// Authenticate API request via x-app-key header
+export async function authenticateTrackRequest(
   request: NextRequest
-): Promise<{ user: AuthUser | null; error: string | null }> {
-  const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization')?.replace('Bearer ', '');
+): Promise<{ app: AuthenticatedApp | null; error: string | null }> {
+  const writeKey = request.headers.get('x-app-key');
 
-  if (!apiKey) {
-    return { user: null, error: 'API key is required' };
+  if (!writeKey) {
+    return { app: null, error: 'Missing x-app-key header' };
+  }
+
+  if (!writeKey.startsWith('sk_')) {
+    return { app: null, error: 'Invalid write key format' };
   }
 
   try {
-    const supabase = createServerClient();
+    const appData = await getAppByWriteKey(writeKey);
 
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, email, name, subscription_tier, subscription_status')
-      .eq('api_key', apiKey)
-      .single();
+    const app: AuthenticatedApp = {
+      id: appData.id,
+      name: appData.name,
+      category: appData.category,
+      org_id: (appData.orgs as any).id,
+      org_name: (appData.orgs as any).name,
+      org_plan: (appData.orgs as any).plan,
+      rate_limit_per_sec: appData.rate_limit_per_sec
+    };
 
-    if (error || !user) {
-      return { user: null, error: 'Invalid API key' };
-    }
-
-    return { user: user as AuthUser, error: null };
+    return { app, error: null };
   } catch (err) {
-    return { user: null, error: 'Authentication failed' };
+    return { app: null, error: 'Invalid or inactive write key' };
   }
 }
 
-// Generate a new API key for a user
-export async function generateApiKey(): Promise<string> {
-  const randomBytes = new Uint8Array(32);
-  crypto.getRandomValues(randomBytes);
-
-  const apiKey = Array.from(randomBytes)
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-
-  return `cgpt_${apiKey}`;
-}
-
-// Create or get user from email
-export async function getOrCreateUser(email: string, name?: string) {
-  const supabase = createServerClient();
-
-  // Check if user exists
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .single();
-
-  if (existingUser) {
-    return existingUser;
-  }
-
-  // Create new user with generated API key
-  const apiKey = await generateApiKey();
-
-  const { data: newUser, error } = await supabase
-    .from('users')
-    .insert({
-      email,
-      name,
-      api_key: apiKey,
-      subscription_tier: 'free',
-      subscription_status: 'inactive',
-      api_calls_limit: 1000,
-      api_calls_used: 0
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error('Failed to create user');
-  }
-
-  return newUser;
-}
-
-// Validate subscription tier access
-export function hasAccess(
-  userTier: 'free' | 'pro' | 'enterprise',
-  requiredTier: 'free' | 'pro' | 'enterprise'
+// Check if org has access to feature based on plan
+export function hasFeatureAccess(
+  plan: 'free' | 'pro' | 'team',
+  feature: 'benchmarks' | 'csv_export' | 'unlimited_apps'
 ): boolean {
-  const tierLevels = {
-    free: 0,
-    pro: 1,
-    enterprise: 2
+  const featureMatrix: Record<'free' | 'pro' | 'team', Array<'benchmarks' | 'csv_export' | 'unlimited_apps'>> = {
+    free: [],
+    pro: ['benchmarks', 'csv_export'],
+    team: ['benchmarks', 'csv_export', 'unlimited_apps']
   };
 
-  return tierLevels[userTier] >= tierLevels[requiredTier];
+  return featureMatrix[plan].includes(feature);
 }
 
-// Get tier limits
-export function getTierLimits(tier: 'free' | 'pro' | 'enterprise') {
-  const limits = {
+// Get plan limits
+export function getPlanLimits(plan: 'free' | 'pro' | 'team') {
+  return {
     free: {
-      apiCallsPerMonth: 1000,
-      dataRetentionDays: 30,
-      exportFormats: ['json'],
-      maxSessionsPerDay: 100
+      retention_days: 7,
+      max_apps: 1,
+      features: ['basic_metrics']
     },
     pro: {
-      apiCallsPerMonth: 10000,
-      dataRetentionDays: 365,
-      exportFormats: ['json', 'csv'],
-      maxSessionsPerDay: 1000
+      retention_days: 90,
+      max_apps: 5,
+      features: ['basic_metrics', 'benchmarks', 'csv_export']
     },
-    enterprise: {
-      apiCallsPerMonth: Infinity,
-      dataRetentionDays: Infinity,
-      exportFormats: ['json', 'csv', 'pdf'],
-      maxSessionsPerDay: Infinity
+    team: {
+      retention_days: 180,
+      max_apps: Infinity,
+      features: ['basic_metrics', 'benchmarks', 'csv_export', 'priority_support']
     }
-  };
-
-  return limits[tier];
+  }[plan];
 }

@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { BarChart3, Home, Layers, TrendingUp, Settings, LogOut, Activity, CreditCard } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { BarChart3, Home, Layers, TrendingUp, Settings, LogOut, Activity, CreditCard, User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -10,6 +12,26 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, userEmail, loading, signOut } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: Home },
@@ -38,16 +60,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="text-xl font-bold text-gray-900">Odin</span>
             </div>
 
-            <button
-              onClick={() => {
-                document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-                window.location.href = '/login';
-              }}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sign out</span>
-            </button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+                <User className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-700">{userEmail}</span>
+              </div>
+              <button
+                onClick={signOut}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign out</span>
+              </button>
+            </div>
           </div>
         </div>
       </nav>

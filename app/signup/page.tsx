@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BarChart3 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,18 +24,18 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      const { error: signUpError } = await signUp(
+        formData.email,
+        formData.password,
+        formData.name,
+        formData.orgName
+      );
 
-      const data = await response.json();
-
-      if (data.success) {
-        router.push('/dashboard');
+      if (signUpError) {
+        setError(signUpError.message || 'Signup failed');
       } else {
-        setError(data.error || 'Signup failed');
+        // Show success message - user needs to verify email
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');

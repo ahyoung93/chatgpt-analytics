@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BarChart3 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,18 +20,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+      const { error: signInError } = await signIn(email, password);
 
-      const data = await response.json();
-
-      if (data.success) {
-        router.push('/dashboard');
+      if (signInError) {
+        setError(signInError.message || 'Invalid email or password');
       } else {
-        setError(data.error || 'Login failed');
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');

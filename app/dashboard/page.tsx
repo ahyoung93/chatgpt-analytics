@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasApps, setHasApps] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -44,17 +45,34 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     // TODO: Replace with actual API calls
+    // Check if user has apps - for now, simulate no apps for first-time users
+    const userHasApps = false; // TODO: Fetch from API
+    setHasApps(userHasApps);
+
     // Simulating API response with sample data
     setTimeout(() => {
-      setStats({
-        total_events: 12547,
-        invoked_count: 3892,
-        completed_count: 3654,
-        error_count: 238,
-        success_rate: 0.939,
-        avg_latency_ms: 1240,
-        errors_today: 12
-      });
+      if (userHasApps) {
+        setStats({
+          total_events: 12547,
+          invoked_count: 3892,
+          completed_count: 3654,
+          error_count: 238,
+          success_rate: 0.939,
+          avg_latency_ms: 1240,
+          errors_today: 12
+        });
+      } else {
+        // First-time user - no data yet
+        setStats({
+          total_events: 0,
+          invoked_count: 0,
+          completed_count: 0,
+          error_count: 0,
+          success_rate: 0,
+          avg_latency_ms: 0,
+          errors_today: 0
+        });
+      }
 
       // Sample time series data for the last 7 days
       const sampleTimeSeriesData: TimeSeriesData[] = [
@@ -161,6 +179,107 @@ export default function DashboardPage() {
           <div className="text-center py-12">
             <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
+        ) : !hasApps || (stats && stats.total_events === 0) ? (
+          <>
+            {/* First-Time User / No Data Yet */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 mb-8 text-white">
+              <h2 className="text-3xl font-bold mb-4">Welcome to Odin! 🎉</h2>
+              <p className="text-lg mb-6 text-blue-50">
+                Let&apos;s get you set up to start tracking your ChatGPT app analytics.
+              </p>
+            </div>
+
+            {/* Stats Grid - Empty State */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {statCards.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.name} className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                        <Icon className={`w-6 h-6 ${stat.textColor}`} />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 mb-1">0</p>
+                    <p className="text-sm text-gray-600">{stat.name}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Getting Started Guide */}
+            <div className="bg-white rounded-lg border border-gray-200 p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">🚀 Quick Start Guide</h2>
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                    1
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Create Your First App</h3>
+                    <p className="text-gray-600 mb-3">
+                      Go to the Apps page and create your first ChatGPT app. You&apos;ll get an API write key that you&apos;ll use to track events.
+                    </p>
+                    <a
+                      href="/dashboard/apps"
+                      className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    >
+                      Create App
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                    2
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Install the Odin SDK</h3>
+                    <p className="text-gray-600 mb-3">
+                      Install the Odin Analytics SDK in your ChatGPT app project.
+                    </p>
+                    <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm">
+                      npm install @odin-analytics/sdk
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                    3
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Tracking Events</h3>
+                    <p className="text-gray-600 mb-3">
+                      Add tracking to your ChatGPT app with just a few lines of code.
+                    </p>
+                    <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm">
+                      <pre>{`import { createClient } from '@odin-analytics/sdk';
+
+const analytics = createClient({
+  appKey: 'sk_your_write_key'
+});
+
+await analytics.invoked();
+await analytics.completed({ latency_ms: 1200 });`}</pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                    4
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">View Your Analytics</h3>
+                    <p className="text-gray-600">
+                      Once events start flowing in, you&apos;ll see charts, stats, and insights right here on this dashboard!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <>
             {/* Stats Grid */}

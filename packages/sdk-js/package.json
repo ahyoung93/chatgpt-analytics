@@ -1,0 +1,16 @@
+{
+  "name": "@chatgpt-analytics/sdk-js",
+  "version": "1.0.0",
+  "description": "JavaScript/TypeScript SDK for ChatGPT Analytics",
+  "main": "index.ts",
+  "types": "index.ts",
+  "keywords": [
+    "chatgpt",
+    "analytics",
+    "openai",
+    "tracking",
+    "metrics"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

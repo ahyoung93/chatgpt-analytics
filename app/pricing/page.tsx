@@ -162,7 +162,7 @@ export default function PricingPage() {
                 Do you collect any PII or raw prompts?
               </h3>
               <p className="text-gray-600">
-                No. We only collect event metadata (type, timestamp, latency, etc.). You can
+                No. Odin only collects event metadata (type, timestamp, latency, etc.). You can
                 optionally send a prompt hash for deduplication, but never raw user input.
               </p>
             </div>

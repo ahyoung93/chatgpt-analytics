@@ -1,10 +1,11 @@
 {
-  "name": "@chatgpt-app-analytics/sdk",
+  "name": "@odin-analytics/sdk",
   "version": "1.0.0",
-  "description": "Official SDK for ChatGPT App Analytics - Track performance of your ChatGPT apps (Custom GPTs, Plugins, MCP servers)",
+  "description": "Official SDK for Odin - Analytics for ChatGPT Apps (Custom GPTs, Plugins, MCP servers)",
   "main": "index.ts",
   "types": "index.ts",
   "keywords": [
+    "odin",
     "chatgpt",
     "analytics",
     "openai",
@@ -13,7 +14,7 @@
     "gpt-plugin",
     "mcp"
   ],
-  "author": "Your Name",
+  "author": "Odin Analytics",
   "license": "MIT",
   "repository": {
     "type": "git",

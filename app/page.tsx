@@ -10,7 +10,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-8 h-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">ChatGPT App Analytics</span>
+              <span className="text-xl font-bold text-gray-900">Odin</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -41,9 +41,9 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Analytics for Your
+            <span className="text-blue-600">Odin</span>
             <br />
-            <span className="text-blue-600">ChatGPT Apps</span>
+            Analytics for ChatGPT Apps
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Track performance, reliability, and user adoption of your Custom GPTs,
@@ -120,7 +120,7 @@ export default function HomePage() {
         <div className="mt-24 bg-gray-900 rounded-2xl p-8 text-white">
           <h2 className="text-2xl font-bold mb-6">Get Started in Seconds</h2>
           <pre className="bg-black/30 p-6 rounded-lg overflow-x-auto">
-            <code>{`import { createClient } from '@chatgpt-app-analytics/sdk';
+            <code>{`import { createClient } from '@odin-analytics/sdk';
 
 const analytics = createClient({ appKey: 'sk_...' });
 
@@ -149,7 +149,7 @@ await analytics.track('converted', { name: 'purchase' });`}</code>
       <footer className="border-t border-gray-200 mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center text-gray-600">
-            <p>&copy; 2024 ChatGPT App Analytics. All rights reserved.</p>
+            <p>&copy; 2024 Odin Analytics. All rights reserved.</p>
           </div>
         </div>
       </footer>

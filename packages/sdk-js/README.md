@@ -1,19 +1,19 @@
-# ChatGPT App Analytics SDK
+# Odin Analytics SDK
 
 Official SDK for tracking ChatGPT App performance. Works with Custom GPTs, ChatGPT Plugins, and MCP servers.
 
 ## Installation
 
 ```bash
-npm install @chatgpt-app-analytics/sdk
+npm install @odin-analytics/sdk
 # or
-yarn add @chatgpt-app-analytics/sdk
+yarn add @odin-analytics/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { createClient } from '@chatgpt-app-analytics/sdk';
+import { createClient } from '@odin-analytics/sdk';
 
 // Initialize with your app's write key
 const analytics = createClient({ appKey: 'sk_...' });

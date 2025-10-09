@@ -11,12 +11,12 @@ export default function DocsPage() {
 
             <h3 className="text-xl font-semibold mb-2">Installation</h3>
             <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
-              <code>npm install @chatgpt-app-analytics/sdk</code>
+              <code>npm install @odin-analytics/sdk</code>
             </pre>
 
             <h3 className="text-xl font-semibold mb-2">Usage</h3>
             <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg">
-              <code>{`import { createClient } from '@chatgpt-app-analytics/sdk';
+              <code>{`import { createClient } from '@odin-analytics/sdk';
 
 const analytics = createClient({ appKey: 'sk_...' });
 

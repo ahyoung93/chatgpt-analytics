@@ -1,25 +1,24 @@
-# ChatGPT Analytics SaaS Platform
+# Odin - Analytics for ChatGPT Apps
 
-A comprehensive analytics platform for tracking ChatGPT usage, costs, and performance metrics.
+A privacy-first analytics platform for tracking ChatGPT App performance. Monitor Custom GPTs, Plugins, and MCP servers with category benchmarks and k-anonymity protection.
 
 ## Features
 
-- **Real-time Analytics**: Track every ChatGPT conversation with detailed metrics
-- **Cost Monitoring**: Monitor token usage and associated costs across different models
-- **Session Management**: Organize conversations into sessions with metadata
-- **Data Export**: Export analytics data in CSV, JSON, or PDF formats
-- **Subscription Tiers**: Free, Pro, and Enterprise plans with Stripe integration
-- **API Rate Limiting**: Built-in rate limiting per subscription tier
-- **Secure Authentication**: API key-based authentication
-- **Beautiful Dashboard**: Modern, responsive UI built with Next.js and Tailwind CSS
+- **Event Tracking**: Track invoked, completed, error, converted, and custom events
+- **Category Benchmarks**: Compare your app against others in your category with privacy protection (≥7 apps required)
+- **Privacy-First**: No PII collection, no raw prompts, optional prompt hashing for deduplication
+- **Plan-Based Retention**: Free (7 days), Pro (90 days), Team (180 days)
+- **Rate Limiting**: 10 requests/second per write key
+- **Simple SDK**: 3 lines of code to get started
+- **Beautiful Dashboard**: Modern UI for visualizing app metrics (coming soon)
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React, Tailwind CSS, Recharts
+- **Frontend**: Next.js 14, React, Tailwind CSS
 - **Backend**: Next.js API Routes
 - **Database**: Supabase (PostgreSQL)
 - **Payments**: Stripe
-- **Authentication**: API Key-based
+- **Authentication**: API Key-based (x-app-key header)
 - **Deployment**: Vercel
 
 ## Project Structure
@@ -28,29 +27,23 @@ A comprehensive analytics platform for tracking ChatGPT usage, costs, and perfor
 chatgpt-analytics/
 ├── app/
 │   ├── api/
-│   │   ├── track/          # Track ChatGPT messages
-│   │   ├── metrics/        # Get analytics data
+│   │   ├── track/          # Event tracking endpoint
+│   │   ├── metrics/        # Get app metrics
+│   │   ├── export/         # CSV data export
 │   │   ├── billing/        # Stripe billing
-│   │   ├── export/         # Data export
 │   │   └── webhooks/       # Stripe webhooks
-│   ├── dashboard/          # Analytics dashboard
+│   ├── dashboard/          # Dashboard UI
 │   ├── pricing/            # Pricing page
 │   ├── docs/               # Documentation
 │   └── page.tsx            # Landing page
-├── components/             # React components
-│   ├── ExportButton.tsx
-│   ├── MetricsChart.tsx
-│   ├── StatsCard.tsx
-│   ├── PricingCard.tsx
-│   └── SessionsList.tsx
 ├── lib/                    # Utility libraries
 │   ├── db.ts              # Database utilities
 │   ├── auth.ts            # Authentication
 │   ├── stripe.ts          # Stripe integration
-│   ├── metrics.ts         # Analytics calculations
-│   └── export.ts          # Data export
+│   ├── metrics.ts         # Metrics calculations
+│   └── benchmarks.ts      # Category benchmarks
 ├── packages/
-│   └── sdk-js/            # JavaScript SDK
+│   └── sdk-js/            # Official JavaScript SDK
 ├── scripts/
 │   └── init_db.sql        # Database schema
 └── .env.local             # Environment variables
@@ -68,18 +61,37 @@ chatgpt-analytics/
 ### 2. Clone and Install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/ahyoung93/chatgpt-analytics
 cd chatgpt-analytics
 npm install
 ```
 
 ### 3. Set Up Environment Variables
 
-Your `.env.local` file is already configured. Make sure all values are correct.
+Configure `.env.local` with your credentials:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+
+# NextAuth
+NEXTAUTH_URL=your_app_url
+NEXTAUTH_SECRET=random_secret_string
+
+# App
+NEXT_PUBLIC_APP_URL=your_app_url
+```
 
 ### 4. Run Database Migration
 
-Follow the instructions in `scripts/run-migration.md` to set up your Supabase database.
+Execute the SQL in `scripts/init_db.sql` in your Supabase SQL editor.
 
 ### 5. Run Development Server
 
@@ -96,43 +108,59 @@ npm run build
 npm start
 ```
 
-## Deployment
+## Using the Odin SDK
 
-Follow the comprehensive deployment guide in `DEPLOYMENT.md`.
+### Installation
 
-### Quick Deploy to Vercel
+```bash
+npm install @odin-analytics/sdk
+```
 
-1. Push your code to GitHub
-2. Import your repository on Vercel
-3. Add all environment variables from `.env.local`
-4. Deploy!
+### Example Usage
+
+```typescript
+import { createClient } from '@odin-analytics/sdk';
+
+// Initialize with your app's write key
+const analytics = createClient({ appKey: 'sk_...' });
+
+// Track events
+await analytics.invoked();
+await analytics.completed({ latency_ms: 1200 });
+await analytics.error('API timeout');
+await analytics.converted('purchase_completed');
+await analytics.custom('user_feedback', { rating: 5 });
+```
+
+### Event Types
+
+- **invoked** - Your app was called
+- **completed** - Your app succeeded (optionally include latency_ms)
+- **error** - Your app failed (optionally include error_message)
+- **converted** - User achieved a goal (optionally include conversion name)
+- **custom** - Your own custom event
 
 ## API Documentation
 
 ### Authentication
 
-All API endpoints require an API key in the header:
+All API endpoints require a write key in the header:
 
 ```
-x-api-key: your_api_key_here
+x-app-key: sk_your_write_key_here
 ```
 
 ### POST /api/track
 
-Track a ChatGPT message.
+Track a ChatGPT app event.
 
 **Request:**
 ```json
 {
-  "sessionId": "unique-session-id",
-  "message": {
-    "role": "user",
-    "content": "Hello, ChatGPT!",
-    "model": "gpt-4",
-    "promptTokens": 10,
-    "completionTokens": 20,
-    "totalTokens": 30,
-    "latencyMs": 1500
+  "event": "completed",
+  "latency_ms": 1200,
+  "properties": {
+    "user_tier": "premium"
   }
 }
 ```
@@ -141,171 +169,134 @@ Track a ChatGPT message.
 ```json
 {
   "success": true,
-  "messageId": "uuid",
-  "sessionId": "uuid",
-  "cost": 0.0015,
-  "remainingCalls": 999
+  "event_id": "uuid"
 }
 ```
 
 ### GET /api/metrics
 
-Get analytics metrics.
+Get app metrics summary.
 
 **Query Parameters:**
-- `startDate` (optional): ISO date string
-- `endDate` (optional): ISO date string
-- `includeSessions` (optional): boolean
+- `app_id` (required): Your app ID
+- `start_date` (required): ISO date string
+- `end_date` (required): ISO date string
 
 **Response:**
 ```json
 {
   "success": true,
-  "dateRange": {
-    "start": "2024-01-01T00:00:00.000Z",
-    "end": "2024-01-31T23:59:59.999Z"
-  },
   "metrics": {
-    "totalSessions": 150,
-    "totalMessages": 1200,
-    "totalTokens": 45000,
-    "totalCost": 2.50,
-    "avgLatency": 1200,
-    "modelBreakdown": {
-      "gpt-4": 800,
-      "gpt-3.5-turbo": 400
-    },
-    "timeSeriesData": [...]
+    "total_events": 1500,
+    "invoked_count": 500,
+    "completed_count": 450,
+    "error_count": 50,
+    "success_rate": 0.90,
+    "avg_latency_ms": 1200
+  }
+}
+```
+
+### GET /api/benchmarks
+
+Get category benchmarks (requires Pro or Team plan).
+
+**Query Parameters:**
+- `app_id` (required): Your app ID
+- `start_date` (required): ISO date string
+- `end_date` (required): ISO date string
+
+**Response:**
+```json
+{
+  "success": true,
+  "available": true,
+  "benchmarks": {
+    "category": "productivity",
+    "your_success_rate": 0.92,
+    "category_avg_success_rate": 0.85,
+    "your_avg_latency": 1100,
+    "category_avg_latency": 1500
   }
 }
 ```
 
 ### POST /api/export
 
-Export analytics data.
+Export analytics data (requires Pro or Team plan).
 
 **Request:**
 ```json
 {
-  "format": "csv",
-  "startDate": "2024-01-01",
-  "endDate": "2024-01-31"
+  "app_id": "uuid",
+  "start_date": "2024-01-01",
+  "end_date": "2024-01-31"
 }
 ```
 
 **Response:**
-```json
-{
-  "success": true,
-  "exportId": "uuid",
-  "message": "Export created successfully"
-}
-```
-
-### POST /api/billing
-
-Create a checkout session.
-
-**Request:**
-```json
-{
-  "tier": "pro",
-  "successUrl": "https://your-app.com/success",
-  "cancelUrl": "https://your-app.com/cancel"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "sessionId": "stripe_session_id",
-  "url": "https://checkout.stripe.com/..."
-}
-```
-
-## Using the SDK
-
-### Installation
-
-```bash
-npm install @chatgpt-analytics/sdk-js
-```
-
-### Example Usage
-
-```typescript
-import { ChatGPTAnalytics } from '@chatgpt-analytics/sdk-js';
-
-const analytics = new ChatGPTAnalytics('your-api-key');
-
-// Track a message
-await analytics.track({
-  sessionId: 'user-123-session-abc',
-  message: {
-    role: 'user',
-    content: 'Hello, ChatGPT!',
-    model: 'gpt-4',
-    totalTokens: 15
-  }
-});
-
-// Get metrics
-const metrics = await analytics.getMetrics({
-  startDate: new Date('2024-01-01'),
-  endDate: new Date()
-});
-
-// Export data
-const exportResult = await analytics.export({
-  format: 'csv'
-});
-```
+CSV file download
 
 ## Pricing Plans
 
-- **Free**: 1,000 API calls/month, 30 days retention, JSON export
-- **Pro** ($29/mo): 10,000 API calls/month, 365 days retention, CSV & JSON export
-- **Enterprise** ($99/mo): Unlimited calls, unlimited retention, all formats
+- **Free** ($0/mo): 7 days retention, 1 app, 10k events/month
+- **Pro** ($49/mo): 90 days retention, 5 apps, 100k events/month, category benchmarks, CSV export
+- **Team** ($99/mo): 180 days retention, unlimited apps, unlimited events, priority support
+
+## Categories
+
+Your app can be categorized as:
+- Travel
+- Productivity
+- Dev Tools
+- Shopping
+- Education
+- Entertainment
+- Customer Support
+- Content Generation
+- Data Analysis
+- Other
+
+Category benchmarks require ≥7 apps for k-anonymity privacy protection.
 
 ## Database Schema
 
-The platform uses the following main tables:
-
-- `users` - User accounts and subscription info
-- `chat_sessions` - ChatGPT conversation sessions
-- `chat_messages` - Individual messages within sessions
-- `usage_metrics` - Aggregated daily usage statistics
-- `billing_history` - Stripe billing records
-- `api_logs` - API request logs
-- `exports` - Data export records
+Key tables:
+- `orgs` - Organizations with subscription plans
+- `org_members` - Team members and roles
+- `apps` - ChatGPT apps with write keys
+- `events` - Individual event records
+- `app_daily_metrics` - Aggregated daily metrics
+- `category_daily_benchmarks` - Privacy-protected benchmarks
+- `subscriptions` - Stripe subscription data
 
 See `scripts/init_db.sql` for the complete schema.
 
-## Environment Variables
+## Privacy
 
-Required environment variables:
+Odin is privacy-first:
+- ✅ No PII collection
+- ✅ No raw prompts stored
+- ✅ Optional prompt hashing for deduplication
+- ✅ K-anonymity protection for benchmarks (≥7 apps)
+- ✅ Plan-based data retention
+- ✅ No cross-app tracking
 
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+## Deployment
 
-# Stripe
-STRIPE_SECRET_KEY=your_stripe_secret_key
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-STRIPE_WEBHOOK_SECRET=your_webhook_secret
-STRIPE_PRICE_ID_PRO=price_xxx
-STRIPE_PRICE_ID_ENTERPRISE=price_xxx
+### Deploy to Vercel
 
-# NextAuth
-NEXTAUTH_URL=your_app_url
-NEXTAUTH_SECRET=random_secret_string
+1. Push your code to GitHub
+2. Import repository on Vercel
+3. Add all environment variables
+4. Deploy!
 
-# App
-NEXT_PUBLIC_APP_URL=your_app_url
-```
+### Post-Deployment
+
+1. Run database migration in Supabase
+2. Create Stripe products (Pro $49, Team $99)
+3. Configure Stripe webhook: `https://your-domain.vercel.app/api/webhooks/stripe`
+4. Test with the SDK
 
 ## Contributing
 
@@ -317,24 +308,13 @@ NEXT_PUBLIC_APP_URL=your_app_url
 
 ## License
 
-MIT License - feel free to use this project for your own purposes.
+MIT License
 
 ## Support
 
-For issues or questions:
-- Check the documentation in `/docs`
-- Review the deployment guide in `DEPLOYMENT.md`
-- Open an issue on GitHub
-
-## Next Steps
-
-1. Complete the Supabase database migration
-2. Deploy to Vercel
-3. Set up Stripe webhook
-4. Create Stripe products and price IDs
-5. Test the API with the SDK
-6. Monitor your first tracked conversations!
+- Documentation: https://your-domain.com/docs
+- Issues: https://github.com/ahyoung93/chatgpt-analytics/issues
 
 ---
 
-Built with ❤️ using Next.js, Supabase, and Stripe
+Built with Next.js, Supabase, and Stripe

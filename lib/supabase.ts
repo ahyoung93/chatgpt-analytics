@@ -4,6 +4,12 @@ import { Database } from './database.types';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+// Debug logging (will show in browser console)
+if (typeof window !== 'undefined') {
+  console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
+  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Set' : 'Missing');
+}
+
 if (!supabaseUrl) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
 }

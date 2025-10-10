@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/db';
+import { createServerClient } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
     console.log('[Cron] Starting cleanup job...');
 
-    const supabase = createServiceClient();
+    const supabase = createServerClient();
 
     // Run cleanup function
     const { data, error } = await supabase.rpc('cleanup_old_events', {

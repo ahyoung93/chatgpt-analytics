@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, createServiceClient } from '@/lib/db';
+import { createClient as createAuthClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -8,8 +9,8 @@ export const revalidate = 0;
 export async function POST(request: NextRequest) {
   try {
     // Authenticate user
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authSupabase = await createAuthClient();
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now();
 
     // Use service client for cleanup function
-    const serviceSupabase = createServiceClient();
+    const serviceSupabase = createServerClient();
 
     // Run cleanup function
     const { data, error } = await serviceSupabase.rpc('cleanup_old_events', {
@@ -87,8 +88,8 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Authenticate user
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authSupabase = await createAuthClient();
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use service client to fetch logs
-    const serviceSupabase = createServiceClient();
+    const serviceSupabase = createServerClient();
 
     const { data: logs, error } = await serviceSupabase
       .from('cleanup_logs')

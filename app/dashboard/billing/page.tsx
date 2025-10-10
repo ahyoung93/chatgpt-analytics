@@ -101,8 +101,9 @@ export default function BillingPage() {
 
       const data = await response.json();
       if (data.success && data.url) {
-        // Redirect immediately - don't reset loading state
-        window.location.href = data.url;
+        // Open Stripe Checkout in new tab
+        window.open(data.url, '_blank');
+        setLoading(false);
       } else {
         setLoading(false);
         alert('Failed to create checkout session: ' + (data.error || 'Unknown error'));

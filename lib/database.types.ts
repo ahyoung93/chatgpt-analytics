@@ -359,6 +359,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      cleanup_logs: {
+        Row: {
+          id: number
+          run_at: string
+          events_deleted: number
+          free_tier_deleted: number
+          pro_tier_deleted: number
+          team_tier_deleted: number
+          duration_ms: number | null
+          success: boolean
+          error_message: string | null
+        }
+        Insert: {
+          id?: number
+          run_at?: string
+          events_deleted?: number
+          free_tier_deleted?: number
+          pro_tier_deleted?: number
+          team_tier_deleted?: number
+          duration_ms?: number | null
+          success?: boolean
+          error_message?: string | null
+        }
+        Update: {
+          id?: number
+          run_at?: string
+          events_deleted?: number
+          free_tier_deleted?: number
+          pro_tier_deleted?: number
+          team_tier_deleted?: number
+          duration_ms?: number | null
+          success?: boolean
+          error_message?: string | null
+        }
+      }
     }
     Functions: {
       aggregate_app_daily_metrics: {
@@ -388,8 +423,15 @@ export interface Database {
         Returns: number
       }
       cleanup_old_events: {
-        Args: Record<string, never>
-        Returns: void
+        Args: {
+          dry_run?: boolean
+        }
+        Returns: {
+          events_deleted: number
+          free_tier_deleted: number
+          pro_tier_deleted: number
+          team_tier_deleted: number
+        }[]
       }
       calculate_retention_metrics: {
         Args: {

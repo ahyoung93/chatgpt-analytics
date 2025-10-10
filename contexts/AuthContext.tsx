@@ -109,46 +109,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string, orgName: string) => {
-    const supabase = createClient();
     try {
-      // Sign up the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
+      // Call the API route which uses service role key to bypass RLS
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ email, password, name, orgName }),
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('User creation failed');
+      const data = await response.json();
 
-      // Create organization
-      const { data: orgData, error: orgError } = await supabase
-        .from('orgs')
-        .insert({
-          name: orgName,
-          plan: 'free',
-        })
-        .select()
-        .single();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Signup failed');
+      }
 
-      if (orgError) throw orgError;
+      // After successful signup, sign in to establish the session
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Add user as owner of the organization
-      const { error: memberError } = await supabase
-        .from('org_members')
-        .insert({
-          org_id: orgData.id,
-          user_id: authData.user.id,
-          role: 'owner',
-          email: email,
-          name: name,
-        });
-
-      if (memberError) throw memberError;
+      if (signInError) throw signInError;
 
       return { error: null };
     } catch (error) {

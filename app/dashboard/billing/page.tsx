@@ -215,7 +215,7 @@ export default function BillingPage() {
           </div>
         </div>
 
-        {/* Upgrade Options */}
+        {/* Upgrade Options - Only show if on free plan */}
         {currentPlan === 'free' && (
           <>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Upgrade Your Plan</h2>

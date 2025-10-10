@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const { data: org } = await supabase
       .from('orgs')
-      .select('stripe_customer_id, name')
+      .select('stripe_customer_id, name, plan')
       .eq('id', orgId)
       .single();
 
@@ -33,6 +33,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Organization not found' },
         { status: 404 }
+      );
+    }
+
+    // Prevent upgrading if already on Pro
+    if (org.plan === 'pro') {
+      return NextResponse.json(
+        { error: 'Already subscribed to Pro plan' },
+        { status: 400 }
       );
     }
 

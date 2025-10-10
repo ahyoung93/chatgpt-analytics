@@ -2,37 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Building2, Shield, Trash2 } from 'lucide-react';
+import { Building2, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface App {
-  id: string;
-  name: string;
-  category: string;
-}
 
 export default function SettingsPage() {
   const { orgId } = useAuth();
   const [orgName, setOrgName] = useState('My Organization');
-  const [selectedApp, setSelectedApp] = useState('');
   const [optInBenchmarks, setOptInBenchmarks] = useState(true);
-  const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch apps
-        const appsResponse = await fetch('/api/apps');
-        if (appsResponse.ok) {
-          const appsData = await appsResponse.json();
-          setApps(appsData.apps || []);
-          if (appsData.apps && appsData.apps.length > 0) {
-            setSelectedApp(appsData.apps[0].id);
-          }
-        }
 
         // Fetch org details
         if (orgId) {
@@ -51,47 +33,6 @@ export default function SettingsPage() {
 
     fetchData();
   }, [orgId]);
-
-  const selectedAppData = apps.find(app => app.id === selectedApp);
-
-  const handleDeleteApp = async () => {
-    if (!selectedApp || !selectedAppData) {
-      alert('No app selected');
-      return;
-    }
-
-    if (confirm(`Are you sure you want to delete "${selectedAppData.name}"? This action cannot be undone and will delete all associated event data.`)) {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/apps/${selectedApp}`, {
-          method: 'DELETE'
-        });
-
-        if (response.ok) {
-          // Remove the deleted app from the list
-          const updatedApps = apps.filter(app => app.id !== selectedApp);
-          setApps(updatedApps);
-
-          // Select the first remaining app, or clear selection if no apps left
-          if (updatedApps.length > 0) {
-            setSelectedApp(updatedApps[0].id);
-          } else {
-            setSelectedApp('');
-          }
-
-          alert('App deleted successfully');
-        } else {
-          const data = await response.json();
-          alert('Failed to delete app: ' + (data.error || 'Unknown error'));
-        }
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('An error occurred while deleting the app');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -157,33 +98,6 @@ export default function SettingsPage() {
                 <p className="text-sm text-gray-700">
                   <strong>Privacy Guarantee:</strong> We never collect PII, raw prompts, or user data. Only aggregate metrics (success rate, latency) are used for benchmarks.
                 </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Danger Zone */}
-          <div className="bg-white rounded-lg border-2 border-red-200 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Trash2 className="w-6 h-6 text-red-600" />
-              <h2 className="text-xl font-bold text-red-900">Danger Zone</h2>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">
-                    Delete App: {selectedAppData?.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 max-w-xl">
-                    Permanently delete this app and all associated event data. This action cannot be undone.
-                  </p>
-                </div>
-                <button
-                  onClick={handleDeleteApp}
-                  disabled={loading || !selectedApp}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Deleting...' : 'Delete App'}
-                </button>
               </div>
             </div>
           </div>

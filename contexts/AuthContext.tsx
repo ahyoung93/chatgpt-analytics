@@ -42,15 +42,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [orgName, setOrgName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
+    const supabase = createClient();
+
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setUserEmail(session?.user?.email ?? null);
       if (session?.user) {
-        fetchUserOrg(session.user.id);
+        fetchUserOrg(session.user.id, supabase);
       } else {
         setLoading(false);
       }
@@ -63,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setUserEmail(session?.user?.email ?? null);
       if (session?.user) {
-        fetchUserOrg(session.user.id);
+        fetchUserOrg(session.user.id, supabase);
       } else {
         setOrgId(null);
         setOrgName(null);
@@ -74,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserOrg = async (userId: string) => {
+  const fetchUserOrg = async (userId: string, supabase: ReturnType<typeof createClient>) => {
     try {
       const { data, error } = await supabase
         .from('org_members')
@@ -94,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    const supabase = createClient();
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -107,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string, orgName: string) => {
+    const supabase = createClient();
     try {
       // Sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -154,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    const supabase = createClient();
     await supabase.auth.signOut();
     setUser(null);
     setUserEmail(null);

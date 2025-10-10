@@ -190,7 +190,7 @@ export default function AppsPage() {
                   </button>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-medium text-gray-700">API Write Key</label>
                     <div className="flex items-center gap-2">
@@ -212,14 +212,52 @@ export default function AppsPage() {
                       </button>
                     </div>
                   </div>
-                  <code className="text-sm text-gray-900 font-mono">
+                  <code className="text-sm text-gray-900 font-mono block break-all">
                     {visibleKeys.has(app.id)
                       ? app.write_key
                       : app.write_key.substring(0, 12) + '••••••••••••••••••••'}
                   </code>
                 </div>
 
-                <div className="mt-4 text-sm text-gray-500">
+                {/* Integration Instructions */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-3">📍 Quick Setup (2 minutes)</h4>
+                  <div className="space-y-3 text-sm text-blue-900">
+                    <div className="bg-white bg-opacity-50 rounded p-3">
+                      <p className="font-semibold mb-1">1. Add to your GPT Actions</p>
+                      <p className="text-blue-800">In ChatGPT → Configure → Actions → Add new action</p>
+                    </div>
+                    <div className="bg-white bg-opacity-50 rounded p-3">
+                      <p className="font-semibold mb-2">2. Use this API call:</p>
+                      <pre className="bg-blue-900 text-blue-50 p-2 rounded text-xs overflow-x-auto">
+{`POST https://chatgpt-analytics-plum.vercel.app/api/track
+Headers:
+  x-app-key: ${app.write_key.substring(0, 20)}...
+  Content-Type: application/json
+
+Body:
+{
+  "event": "invoked",
+  "name": "User started conversation"
+}`}
+                      </pre>
+                    </div>
+                    <div className="bg-white bg-opacity-50 rounded p-3">
+                      <p className="font-semibold mb-1">3. Track events:</p>
+                      <ul className="text-blue-800 space-y-1 ml-4 list-disc">
+                        <li><code className="bg-blue-100 px-1 rounded">invoked</code> - When GPT is called</li>
+                        <li><code className="bg-blue-100 px-1 rounded">completed</code> - Task finished</li>
+                        <li><code className="bg-blue-100 px-1 rounded">error</code> - Something failed</li>
+                        <li><code className="bg-blue-100 px-1 rounded">converted</code> - User goal achieved</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white bg-opacity-50 rounded p-3">
+                      <p className="font-semibold text-green-700">✓ That's it! View analytics in your dashboard</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-sm text-gray-500">
                   Created {new Date(app.created_at).toLocaleDateString()}
                 </div>
               </div>

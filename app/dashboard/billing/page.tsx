@@ -27,7 +27,7 @@ export default function BillingPage() {
     },
     pro: {
       name: 'Pro',
-      price: 49,
+      price: 19,
       description: 'For serious app developers',
       features: [
         '90 days data retention',
@@ -45,7 +45,7 @@ export default function BillingPage() {
     },
     team: {
       name: 'Team',
-      price: 99,
+      price: 59,
       description: 'For teams building multiple apps',
       features: [
         '180 days data retention',
@@ -67,12 +67,17 @@ export default function BillingPage() {
   const handleUpgrade = async (plan: 'pro' | 'team') => {
     setLoading(true);
     try {
-      // TODO: Call Stripe checkout API
+      // Note: Stripe integration requires STRIPE_SECRET_KEY environment variable
+      // For now, show a message that billing is coming soon
+      alert('Stripe billing integration coming soon! For now, all features are available on the free plan.');
+
+      /* TODO: Uncomment when Stripe is configured
       const response = await fetch('/api/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tier: plan,
+          plan: plan,
+          orgId: 'YOUR_ORG_ID', // Need to get from auth context
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing`
         })
@@ -84,6 +89,7 @@ export default function BillingPage() {
       } else {
         alert('Failed to create checkout session');
       }
+      */
     } catch (error) {
       console.error('Upgrade error:', error);
       alert('An error occurred. Please try again.');

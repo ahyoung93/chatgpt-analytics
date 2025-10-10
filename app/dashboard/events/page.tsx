@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Download, Filter, Search, Lock } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Event {
   id: string;
@@ -16,11 +17,29 @@ interface Event {
 }
 
 export default function EventsPage() {
+  const { orgId } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
-
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPlan, setCurrentPlan] = useState('free'); // TODO: Get from user context
+  const [currentPlan, setCurrentPlan] = useState<'free' | 'pro'>('free');
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      if (orgId) {
+        try {
+          const response = await fetch(`/api/orgs/${orgId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setCurrentPlan(data.org?.plan || 'free');
+          }
+        } catch (error) {
+          console.error('Error fetching plan:', error);
+        }
+      }
+    };
+
+    fetchPlan();
+  }, [orgId]);
 
   const eventTypes = ['all', 'invoked', 'completed', 'error', 'converted', 'custom'];
 

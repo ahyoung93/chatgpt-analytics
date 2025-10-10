@@ -49,10 +49,7 @@ export default function RetentionPage() {
     <DashboardLayout>
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">User Retention Analytics</h1>
-          <p className="text-gray-600">
-            See how many users return to your app over time. Data will appear here once you connect your app on the Apps page.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">User Retention Analytics</h1>
         </div>
 
         {/* Retention Metrics Cards */}

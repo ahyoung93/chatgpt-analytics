@@ -47,10 +47,7 @@ export default function RevenuePage() {
     <DashboardLayout>
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Revenue Analytics</h1>
-          <p className="text-gray-600">
-            Track revenue from your conversions. Data will appear here once you connect your app on the Apps page.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Revenue Analytics</h1>
         </div>
 
         {/* Revenue Metrics Cards */}

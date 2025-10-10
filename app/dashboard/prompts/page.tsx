@@ -31,10 +31,7 @@ export default function PromptsPage() {
     <DashboardLayout>
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt Pattern Analysis</h1>
-          <p className="text-gray-600">
-            Discover popular query patterns across your app. Data will appear here once you connect your app on the Apps page.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Prompt Pattern Analysis</h1>
         </div>
 
 

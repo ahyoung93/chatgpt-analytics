@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Check, Crown, Zap, ExternalLink } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BillingPage() {
+  const { orgId } = useAuth();
   const [currentPlan, setCurrentPlan] = useState<'free' | 'pro' | 'team'>('free');
   const [loading, setLoading] = useState(false);
 
@@ -65,19 +67,19 @@ export default function BillingPage() {
   };
 
   const handleUpgrade = async (plan: 'pro' | 'team') => {
+    if (!orgId) {
+      alert('Please sign in to upgrade your plan');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Note: Stripe integration requires STRIPE_SECRET_KEY environment variable
-      // For now, show a message that billing is coming soon
-      alert('Stripe billing integration coming soon! For now, all features are available on the free plan.');
-
-      /* TODO: Uncomment when Stripe is configured
       const response = await fetch('/api/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan: plan,
-          orgId: 'YOUR_ORG_ID', // Need to get from auth context
+          orgId: orgId,
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing`
         })
@@ -87,9 +89,8 @@ export default function BillingPage() {
       if (data.success && data.url) {
         window.location.href = data.url;
       } else {
-        alert('Failed to create checkout session');
+        alert('Failed to create checkout session: ' + (data.error || 'Unknown error'));
       }
-      */
     } catch (error) {
       console.error('Upgrade error:', error);
       alert('An error occurred. Please try again.');

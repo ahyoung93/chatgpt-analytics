@@ -58,8 +58,16 @@ export async function POST(request: NextRequest) {
     const priceId = PRICING_PLANS[plan].priceId;
 
     if (!priceId) {
+      console.error('Missing Stripe Price ID for plan:', plan);
+      console.error('Environment variables check:', {
+        hasProPriceId: !!process.env.STRIPE_PRICE_ID_PRO,
+        hasTeamPriceId: !!process.env.STRIPE_PRICE_ID_TEAM
+      });
       return NextResponse.json(
-        { error: 'Invalid pricing plan' },
+        {
+          error: 'Stripe pricing not configured',
+          message: `Missing STRIPE_PRICE_ID_${plan.toUpperCase()} environment variable. Please add it to Vercel.`
+        },
         { status: 400 }
       );
     }

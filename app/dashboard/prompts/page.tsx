@@ -33,7 +33,7 @@ export default function PromptsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt Pattern Analysis</h1>
           <p className="text-gray-600">
-            Track popular queries without storing sensitive prompt text using SHA-256 hashes.
+            Discover popular query patterns across your app. Data will appear here once you connect your app on the Apps page.
           </p>
         </div>
 
@@ -53,7 +53,7 @@ export default function PromptsPage() {
             <div className="p-12 text-center text-gray-500">
               <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
               <p>No prompt patterns yet</p>
-              <p className="text-sm mt-2">Start sending <code className="bg-gray-100 px-2 py-1 rounded">prompt_hash</code> with your events</p>
+              <p className="text-sm mt-2">Data will appear here once you connect your app</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

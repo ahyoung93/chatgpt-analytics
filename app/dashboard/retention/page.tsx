@@ -51,7 +51,7 @@ export default function RetentionPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">User Retention Analytics</h1>
           <p className="text-gray-600">
-            Track user retention with privacy-preserving hashes. See who returns to your ChatGPT app.
+            See how many users return to your app over time. Data will appear here once you connect your app on the Apps page.
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export default function RetentionPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Retention Curve</h3>
           <div className="h-64 flex items-center justify-center text-gray-500">
-            Retention curve will appear here when you start tracking users
+            Your retention curve will appear here once data starts flowing
           </div>
         </div>
 
@@ -118,7 +118,7 @@ export default function RetentionPage() {
             <div className="p-12 text-center text-gray-500">
               <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
               <p>No retention data yet</p>
-              <p className="text-sm mt-2">Start sending <code className="bg-gray-100 px-2 py-1 rounded">user_hash</code> with your events</p>
+              <p className="text-sm mt-2">Data will appear here once you connect your app</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -49,7 +49,7 @@ export default function RevenuePage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Revenue Analytics</h1>
           <p className="text-gray-600">
-            Track revenue from converted events. Add <code className="text-sm bg-gray-100 px-2 py-1 rounded">revenue</code> field to your tracking events.
+            Track revenue from your conversions. Data will appear here once you connect your app on the Apps page.
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export default function RevenuePage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Over Time</h3>
           <div className="h-64 flex items-center justify-center text-gray-500">
-            Revenue chart will appear here when you start tracking revenue
+            Your revenue chart will appear here once data starts flowing
           </div>
         </div>
 

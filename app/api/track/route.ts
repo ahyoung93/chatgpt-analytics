@@ -15,7 +15,12 @@ const trackEventSchema = z.object({
   properties: z.record(z.any()).optional().default({}),
   prompt_hash: z.string().optional(),
   error_message: z.string().optional(),
-  latency_ms: z.number().optional()
+  latency_ms: z.number().optional(),
+  // Revenue tracking (optional)
+  revenue: z.number().optional(),
+  currency: z.string().optional().default('USD'),
+  // User retention tracking (optional, SHA-256 hash)
+  user_hash: z.string().optional()
 });
 
 export async function POST(request: NextRequest) {
@@ -58,7 +63,10 @@ export async function POST(request: NextRequest) {
         properties: validatedData.properties,
         prompt_hash: validatedData.prompt_hash,
         error_message: validatedData.error_message,
-        latency_ms: validatedData.latency_ms
+        latency_ms: validatedData.latency_ms,
+        revenue: validatedData.revenue,
+        currency: validatedData.currency,
+        user_hash: validatedData.user_hash
       })
       .select()
       .single();

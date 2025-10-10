@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, Home, Layers, TrendingUp, Settings, LogOut, Activity, CreditCard, User } from 'lucide-react';
+import { BarChart3, Home, Layers, TrendingUp, Settings, LogOut, Activity, CreditCard, User, DollarSign, MessageSquare, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 
@@ -37,6 +37,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Overview', href: '/dashboard', icon: Home },
     { name: 'Apps', href: '/dashboard/apps', icon: Layers },
     { name: 'Events', href: '/dashboard/events', icon: Activity },
+    { name: 'Revenue', href: '/dashboard/revenue', icon: DollarSign },
+    { name: 'Prompts', href: '/dashboard/prompts', icon: MessageSquare },
+    { name: 'Retention', href: '/dashboard/retention', icon: Users },
     { name: 'Benchmarks', href: '/dashboard/benchmarks', icon: TrendingUp },
     { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },

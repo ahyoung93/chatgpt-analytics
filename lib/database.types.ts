@@ -146,6 +146,9 @@ export interface Database {
           prompt_hash: string | null
           error_message: string | null
           latency_ms: number | null
+          revenue: number | null
+          currency: string
+          user_hash: string | null
           timestamp: string
           created_at: string
         }
@@ -158,6 +161,9 @@ export interface Database {
           prompt_hash?: string | null
           error_message?: string | null
           latency_ms?: number | null
+          revenue?: number | null
+          currency?: string
+          user_hash?: string | null
           timestamp?: string
           created_at?: string
         }
@@ -170,6 +176,9 @@ export interface Database {
           prompt_hash?: string | null
           error_message?: string | null
           latency_ms?: number | null
+          revenue?: number | null
+          currency?: string
+          user_hash?: string | null
           timestamp?: string
           created_at?: string
         }
@@ -306,6 +315,50 @@ export interface Database {
           updated_at?: string
         }
       }
+      retention_metrics: {
+        Row: {
+          id: string
+          app_id: string
+          cohort_date: string
+          cohort_size: number
+          day_1_retained: number
+          day_7_retained: number
+          day_30_retained: number
+          day_1_retention_rate: number | null
+          day_7_retention_rate: number | null
+          day_30_retention_rate: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          app_id: string
+          cohort_date: string
+          cohort_size: number
+          day_1_retained?: number
+          day_7_retained?: number
+          day_30_retained?: number
+          day_1_retention_rate?: number | null
+          day_7_retention_rate?: number | null
+          day_30_retention_rate?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          app_id?: string
+          cohort_date?: string
+          cohort_size?: number
+          day_1_retained?: number
+          day_7_retained?: number
+          day_30_retained?: number
+          day_1_retention_rate?: number | null
+          day_7_retention_rate?: number | null
+          day_30_retention_rate?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Functions: {
       aggregate_app_daily_metrics: {
@@ -336,6 +389,13 @@ export interface Database {
       }
       cleanup_old_events: {
         Args: Record<string, never>
+        Returns: void
+      }
+      calculate_retention_metrics: {
+        Args: {
+          target_app_id: string
+          target_cohort_date: string
+        }
         Returns: void
       }
     }

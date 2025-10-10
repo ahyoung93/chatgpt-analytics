@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { TrendingUp, TrendingDown, Activity, CheckCircle, XCircle, Zap, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, CheckCircle, XCircle, Zap, Clock, DollarSign, MessageSquare, ArrowRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
@@ -14,6 +14,8 @@ interface Stats {
   success_rate: number;
   avg_latency_ms: number;
   errors_today: number;
+  total_revenue: number;
+  total_users: number;
 }
 
 interface TimeSeriesData {
@@ -32,10 +34,17 @@ interface ActivityItem {
   latency_ms?: number;
 }
 
+interface TopPrompt {
+  prompt_hash: string;
+  count: number;
+  last_seen: string;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [topPrompts, setTopPrompts] = useState<TopPrompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasApps, setHasApps] = useState(false);
 
@@ -59,7 +68,9 @@ export default function DashboardPage() {
           error_count: 238,
           success_rate: 0.939,
           avg_latency_ms: 1240,
-          errors_today: 12
+          errors_today: 12,
+          total_revenue: 2847.50,
+          total_users: 1243
         });
       } else {
         // First-time user - no data yet
@@ -70,7 +81,9 @@ export default function DashboardPage() {
           error_count: 0,
           success_rate: 0,
           avg_latency_ms: 0,
-          errors_today: 0
+          errors_today: 0,
+          total_revenue: 0,
+          total_users: 0
         });
       }
 
@@ -96,6 +109,16 @@ export default function DashboardPage() {
       ];
       setRecentActivity(sampleActivity);
 
+      // Sample top prompts
+      const samplePrompts: TopPrompt[] = [
+        { prompt_hash: 'a7f3c...', count: 847, last_seen: new Date(Date.now() - 3600000).toISOString() },
+        { prompt_hash: 'b2e91...', count: 623, last_seen: new Date(Date.now() - 7200000).toISOString() },
+        { prompt_hash: 'c9d54...', count: 451, last_seen: new Date(Date.now() - 10800000).toISOString() },
+        { prompt_hash: 'd1a82...', count: 389, last_seen: new Date(Date.now() - 14400000).toISOString() },
+        { prompt_hash: 'e6f23...', count: 321, last_seen: new Date(Date.now() - 18000000).toISOString() },
+      ];
+      setTopPrompts(samplePrompts);
+
       setLoading(false);
     }, 500);
   };
@@ -111,31 +134,31 @@ export default function DashboardPage() {
       change: '+12.5%'
     },
     {
-      name: 'Success Rate',
-      value: stats?.success_rate ? `${(stats.success_rate * 100).toFixed(1)}%` : '0%',
-      icon: CheckCircle,
+      name: 'Total Revenue',
+      value: stats?.total_revenue ? `$${stats.total_revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
+      icon: TrendingUp,
       color: 'green',
       bgColor: 'bg-green-100',
       textColor: 'text-green-600',
-      change: '+2.3%'
+      change: '+18.2%'
     },
     {
-      name: 'Errors Today',
-      value: stats?.errors_today?.toLocaleString() || '0',
-      icon: XCircle,
-      color: 'red',
-      bgColor: 'bg-red-100',
-      textColor: 'text-red-600',
-      change: '-5.2%'
-    },
-    {
-      name: 'Avg Latency',
-      value: stats?.avg_latency_ms ? `${stats.avg_latency_ms.toFixed(0)}ms` : '0ms',
-      icon: Zap,
+      name: 'Total Users',
+      value: stats?.total_users?.toLocaleString() || '0',
+      icon: CheckCircle,
       color: 'purple',
       bgColor: 'bg-purple-100',
       textColor: 'text-purple-600',
-      change: '-8.1%'
+      change: '+8.7%'
+    },
+    {
+      name: 'Success Rate',
+      value: stats?.success_rate ? `${(stats.success_rate * 100).toFixed(1)}%` : '0%',
+      icon: Zap,
+      color: 'orange',
+      bgColor: 'bg-orange-100',
+      textColor: 'text-orange-600',
+      change: '+2.3%'
     }
   ];
 
@@ -181,14 +204,6 @@ export default function DashboardPage() {
           </div>
         ) : !hasApps || (stats && stats.total_events === 0) ? (
           <>
-            {/* First-Time User / No Data Yet */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 mb-8 text-white">
-              <h2 className="text-3xl font-bold mb-4">Welcome to Odin! 🎉</h2>
-              <p className="text-lg mb-6 text-blue-50">
-                Let&apos;s get you set up to start tracking your ChatGPT app analytics.
-              </p>
-            </div>
-
             {/* Stats Grid - Empty State */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {statCards.map((stat) => {
@@ -200,84 +215,28 @@ export default function DashboardPage() {
                         <Icon className={`w-6 h-6 ${stat.textColor}`} />
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 mb-1">0</p>
+                    <p className="text-2xl font-bold text-gray-900 mb-1">
+                      {stat.name === 'Total Revenue' ? '$0.00' : stat.name === 'Success Rate' ? '0%' : '0'}
+                    </p>
                     <p className="text-sm text-gray-600">{stat.name}</p>
                   </div>
                 );
               })}
             </div>
 
-            {/* Getting Started Guide */}
-            <div className="bg-white rounded-lg border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">🚀 Quick Start Guide</h2>
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
-                    1
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Create Your First App</h3>
-                    <p className="text-gray-600 mb-3">
-                      Go to the Apps page and create your first ChatGPT app. You&apos;ll get an API write key that you&apos;ll use to track events.
-                    </p>
-                    <a
-                      href="/dashboard/apps"
-                      className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                    >
-                      Create App
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
-                    2
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Install the Odin SDK</h3>
-                    <p className="text-gray-600 mb-3">
-                      Install the Odin Analytics SDK in your ChatGPT app project.
-                    </p>
-                    <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm">
-                      npm install @odin-analytics/sdk
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Tracking Events</h3>
-                    <p className="text-gray-600 mb-3">
-                      Add tracking to your ChatGPT app with just a few lines of code.
-                    </p>
-                    <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm">
-                      <pre>{`import { createClient } from '@odin-analytics/sdk';
-
-const analytics = createClient({
-  appKey: 'sk_your_write_key'
-});
-
-await analytics.invoked();
-await analytics.completed({ latency_ms: 1200 });`}</pre>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">View Your Analytics</h3>
-                    <p className="text-gray-600">
-                      Once events start flowing in, you&apos;ll see charts, stats, and insights right here on this dashboard!
-                    </p>
-                  </div>
-                </div>
-              </div>
+            {/* Simple Call to Action */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-12 text-center text-white">
+              <h2 className="text-3xl font-bold mb-4">Ready to track your ChatGPT app?</h2>
+              <p className="text-xl mb-8 text-blue-50">
+                Create your first app and let the data flow in. It takes just 2 minutes.
+              </p>
+              <a
+                href="/dashboard/apps"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-lg font-semibold"
+              >
+                Create Your First App
+                <ArrowRight className="w-5 h-5" />
+              </a>
             </div>
           </>
         ) : (
@@ -326,31 +285,60 @@ await analytics.completed({ latency_ms: 1200 });`}</pre>
               </ResponsiveContainer>
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        {getActivityIcon(activity.type)}
+            {/* Recent Activity & Top Prompts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Activity */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
+                <div className="space-y-4">
+                  {recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {getActivityLabel(activity.type)}
+                          </p>
+                          <p className="text-sm text-gray-600">{activity.app_name}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {getActivityLabel(activity.type)}
-                        </p>
-                        <p className="text-sm text-gray-600">{activity.app_name}</p>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">{formatTimestamp(activity.timestamp)}</p>
+                        {activity.latency_ms && (
+                          <p className="text-xs text-gray-400">{activity.latency_ms}ms</p>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">{formatTimestamp(activity.timestamp)}</p>
-                      {activity.latency_ms && (
-                        <p className="text-xs text-gray-400">{activity.latency_ms}ms</p>
-                      )}
+                  ))}
+                </div>
+              </div>
+
+              {/* Top Prompts */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Top Prompt Patterns</h2>
+                <div className="space-y-4">
+                  {topPrompts.map((prompt, idx) => (
+                    <div key={prompt.prompt_hash} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-blue-600">#{idx + 1}</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 font-mono">
+                            {prompt.prompt_hash}
+                          </p>
+                          <p className="text-xs text-gray-500">Last seen {formatTimestamp(prompt.last_seen)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-gray-900">{prompt.count.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">uses</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </>

@@ -233,32 +233,72 @@ export default function BillingPage() {
           </div>
         </div>
 
-        {/* Upgrade Options - Only show if on free plan */}
-        {currentPlan === 'free' && (
-          <>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Upgrade Your Plan</h2>
-            <div className="max-w-md mx-auto">
-              {/* Pro Plan */}
-              <div className="bg-white rounded-lg border-2 border-blue-600 p-8 relative">
+        {/* Plan Comparison - Always visible */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            {currentPlan === 'free' ? 'Upgrade Your Plan' : 'Available Plans'}
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Free Plan */}
+            <div className={`bg-white rounded-lg border-2 p-8 relative ${
+              currentPlan === 'free' ? 'border-blue-600' : 'border-gray-200'
+            }`}>
+              {currentPlan === 'free' && (
                 <div className="absolute top-4 right-4">
                   <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
-                    Recommended
+                    Current Plan
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plans.pro.name}</h3>
-                <p className="text-gray-600 mb-4">{plans.pro.description}</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900">${plans.pro.price}</span>
-                  <span className="text-gray-600">/month</span>
+              )}
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{plans.free.name}</h3>
+              <p className="text-gray-600 mb-4">{plans.free.description}</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">${plans.free.price}</span>
+                <span className="text-gray-600">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                {plans.free.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              {currentPlan === 'free' ? (
+                <div className="w-full py-3 px-6 bg-gray-100 text-gray-600 rounded-lg text-center font-semibold">
+                  Current Plan
                 </div>
-                <ul className="space-y-3 mb-8">
-                  {plans.pro.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+              ) : (
+                <div className="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-lg text-center font-semibold">
+                  Basic Features
+                </div>
+              )}
+            </div>
+
+            {/* Pro Plan */}
+            <div className={`bg-white rounded-lg border-2 p-8 relative ${
+              currentPlan === 'pro' ? 'border-blue-600' : 'border-blue-600'
+            }`}>
+              <div className="absolute top-4 right-4">
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
+                  {currentPlan === 'pro' ? 'Current Plan' : 'Recommended'}
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{plans.pro.name}</h3>
+              <p className="text-gray-600 mb-4">{plans.pro.description}</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">${plans.pro.price}</span>
+                <span className="text-gray-600">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                {plans.pro.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              {currentPlan === 'free' ? (
                 <button
                   onClick={() => handleUpgrade('pro')}
                   disabled={loading}
@@ -274,10 +314,14 @@ export default function BillingPage() {
                     </span>
                   ) : 'Upgrade to Pro'}
                 </button>
-              </div>
+              ) : (
+                <div className="w-full py-3 px-6 bg-blue-100 text-blue-700 rounded-lg text-center font-semibold">
+                  Current Plan
+                </div>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </div>
 
         {/* Features Comparison */}
         <div className="mt-12 bg-white rounded-lg border border-gray-200 p-6">

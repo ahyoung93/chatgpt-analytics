@@ -1,19 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Building2, Code, Shield, Trash2, Copy, Check } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface App {
+  id: string;
+  name: string;
+  category: string;
+  write_key?: string;
+}
 
 export default function SettingsPage() {
+  const { orgId } = useAuth();
   const [orgName, setOrgName] = useState('My Organization');
-  const [selectedApp, setSelectedApp] = useState('app-123');
+  const [selectedApp, setSelectedApp] = useState('');
   const [optInBenchmarks, setOptInBenchmarks] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [apps, setApps] = useState<App[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const apps = [
-    { id: 'app-123', name: 'Travel Assistant', category: 'travel' },
-    { id: 'app-456', name: 'Code Helper', category: 'dev_tools' }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch apps
+        const appsResponse = await fetch('/api/apps');
+        if (appsResponse.ok) {
+          const appsData = await appsResponse.json();
+          setApps(appsData.apps || []);
+          if (appsData.apps && appsData.apps.length > 0) {
+            setSelectedApp(appsData.apps[0].id);
+          }
+        }
+
+        // Fetch org details
+        if (orgId) {
+          const orgResponse = await fetch(`/api/orgs/${orgId}`);
+          if (orgResponse.ok) {
+            const orgData = await orgResponse.json();
+            setOrgName(orgData.org?.name || 'My Organization');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [orgId]);
 
   const selectedAppData = apps.find(app => app.id === selectedApp);
 
@@ -21,7 +60,7 @@ export default function SettingsPage() {
 
 // Initialize with your app's write key
 const analytics = createClient({
-  appKey: 'sk_your_write_key_here'
+  appKey: '${selectedAppData?.write_key || 'sk_your_write_key_here'}'
 });
 
 // Track events
@@ -85,16 +124,26 @@ await analytics.converted('purchase_completed');`;
                 <label htmlFor="appSelect" className="block text-sm font-medium text-gray-700 mb-2">
                   Select App
                 </label>
-                <select
-                  id="appSelect"
-                  value={selectedApp}
-                  onChange={(e) => setSelectedApp(e.target.value)}
-                  className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                >
-                  {apps.map(app => (
-                    <option key={app.id} value={app.id}>{app.name}</option>
-                  ))}
-                </select>
+                {loading ? (
+                  <div className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-400">
+                    Loading apps...
+                  </div>
+                ) : apps.length === 0 ? (
+                  <div className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-400">
+                    No apps found. Create an app first.
+                  </div>
+                ) : (
+                  <select
+                    id="appSelect"
+                    value={selectedApp}
+                    onChange={(e) => setSelectedApp(e.target.value)}
+                    className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                  >
+                    {apps.map(app => (
+                      <option key={app.id} value={app.id}>{app.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">

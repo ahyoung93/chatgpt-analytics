@@ -40,8 +40,13 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (orgError || !orgMember) {
+      console.error('Org lookup failed:', {
+        userId: user.id,
+        error: orgError,
+        data: orgMember
+      });
       return NextResponse.json(
-        { error: 'Organization not found' },
+        { error: 'Organization not found', details: orgError?.message },
         { status: 404 }
       );
     }

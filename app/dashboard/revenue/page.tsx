@@ -97,25 +97,19 @@ export default function RevenuePage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
             <h3 className="text-lg font-bold text-blue-900 mb-3">Start Tracking Revenue</h3>
             <p className="text-blue-800 mb-4">
-              Add revenue tracking to your converted events to see revenue analytics.
+              To track revenue, add a <code className="bg-blue-100 px-2 py-1 rounded">revenue</code> field to your converted events:
             </p>
-            <div className="bg-white rounded-lg p-4 font-mono text-sm">
-              <pre className="text-gray-900">{`// Example: Track a conversion with revenue
-await fetch('https://your-odin-domain.com/api/track', {
-  method: 'POST',
-  headers: {
-    'x-app-key': 'your-api-key',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    event: 'converted',
-    name: 'purchase_completed',
-    revenue: 29.99,        // Revenue amount
-    currency: 'USD',       // Optional, defaults to USD
-    user_hash: 'abc123...' // Optional for user tracking
-  })
-});`}</pre>
+            <div className="bg-white rounded-lg p-4">
+              <pre className="text-sm text-gray-900 font-mono">{`{
+  "event": "converted",
+  "name": "purchase_completed",
+  "revenue": 29.99,
+  "currency": "USD"
+}`}</pre>
             </div>
+            <p className="text-blue-800 mt-4">
+              Need help getting started? Visit the <a href="/dashboard/apps" className="font-semibold underline">Apps tab</a> for complete integration instructions.
+            </p>
           </div>
         )}
 

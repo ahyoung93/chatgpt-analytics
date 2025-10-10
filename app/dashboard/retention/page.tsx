@@ -99,34 +99,27 @@ export default function RetentionPage() {
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 mb-8">
             <h3 className="text-lg font-bold text-indigo-900 mb-3">Start Tracking User Retention</h3>
             <p className="text-indigo-800 mb-4">
-              Hash user IDs on your end and send the hash to Odin for privacy-preserving retention analysis.
+              To track users, add a <code className="bg-indigo-100 px-2 py-1 rounded">user_hash</code> field to your events. Hash the user ID using SHA-256 before sending:
             </p>
-            <div className="bg-white rounded-lg p-4 font-mono text-sm mb-4">
-              <pre className="text-gray-900">{`// Example: Hash and track a user
-import crypto from 'crypto';
-
-const userId = "user_123456";  // Your internal user ID
+            <div className="bg-white rounded-lg p-4">
+              <pre className="text-sm text-gray-900 font-mono">{`// Hash the user ID
 const userHash = crypto
   .createHash('sha256')
   .update(userId)
   .digest('hex');
 
-await fetch('https://your-odin-domain.com/api/track', {
-  method: 'POST',
-  headers: {
-    'x-app-key': 'your-api-key',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    event: 'invoked',
-    user_hash: userHash  // Privacy-preserving hash
-  })
-});`}</pre>
+// Include in event
+{
+  "event": "invoked",
+  "user_hash": userHash
+}`}</pre>
             </div>
-            <div className="bg-indigo-100 rounded p-3 text-sm text-indigo-900">
+            <div className="bg-indigo-100 rounded p-3 text-sm text-indigo-900 mt-4">
               <strong>Privacy Note:</strong> User hashes are one-way - Odin cannot reverse them to see the original user IDs.
-              You can track the same user across sessions by using the same hash.
             </div>
+            <p className="text-indigo-800 mt-4">
+              Need help getting started? Visit the <a href="/dashboard/apps" className="font-semibold underline">Apps tab</a> for complete integration instructions.
+            </p>
           </div>
         )}
 

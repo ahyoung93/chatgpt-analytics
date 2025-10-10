@@ -114,29 +114,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Code Example */}
-        <div className="mt-24 bg-gray-900 rounded-2xl p-8 text-white">
-          <h2 className="text-2xl font-bold mb-6">Get Started in 2 Minutes</h2>
-          <pre className="bg-black/30 p-6 rounded-lg overflow-x-auto text-sm">
-            <code>{`// Add this to your ChatGPT Action
-POST https://chatgpt-analytics-plum.vercel.app/api/track
-
-Headers:
-  x-app-key: your_api_key_here
-  Content-Type: application/json
-
-Body:
-{
-  "event": "invoked",
-  "name": "user_started_conversation",
-  "revenue": 29.99,
-  "user_hash": "sha256_hash",
-  "prompt_hash": "sha256_hash",
-  "latency_ms": 1200
-}`}</code>
-          </pre>
-        </div>
-
         {/* CTA Section */}
         <div className="mt-24 bg-blue-600 rounded-2xl p-12 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to track your ChatGPT app?</h2>

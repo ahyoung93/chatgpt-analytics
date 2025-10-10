@@ -356,7 +356,7 @@ BEGIN
 
     CASE org_plan
         WHEN 'free' THEN RETURN current_app_count < 1;
-        WHEN 'pro' THEN RETURN current_app_count < 5;
+        WHEN 'pro' THEN RETURN current_app_count < 3;
         WHEN 'team' THEN RETURN true;  -- Unlimited
         ELSE RETURN false;
     END CASE;

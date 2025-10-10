@@ -75,10 +75,42 @@ await analytics.converted('purchase_completed');`;
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDeleteApp = () => {
-    if (confirm('Are you sure you want to delete this app? This action cannot be undone.')) {
-      // TODO: Implement delete
-      console.log('Deleting app:', selectedApp);
+  const handleDeleteApp = async () => {
+    if (!selectedApp || !selectedAppData) {
+      alert('No app selected');
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete "${selectedAppData.name}"? This action cannot be undone and will delete all associated event data.`)) {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/apps/${selectedApp}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          // Remove the deleted app from the list
+          const updatedApps = apps.filter(app => app.id !== selectedApp);
+          setApps(updatedApps);
+
+          // Select the first remaining app, or clear selection if no apps left
+          if (updatedApps.length > 0) {
+            setSelectedApp(updatedApps[0].id);
+          } else {
+            setSelectedApp('');
+          }
+
+          alert('App deleted successfully');
+        } else {
+          const data = await response.json();
+          alert('Failed to delete app: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('An error occurred while deleting the app');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -234,9 +266,10 @@ await analytics.converted('purchase_completed');`;
                 </div>
                 <button
                   onClick={handleDeleteApp}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4"
+                  disabled={loading || !selectedApp}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Delete App
+                  {loading ? 'Deleting...' : 'Delete App'}
                 </button>
               </div>
             </div>

@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     if (canCreate === false) {
       return NextResponse.json(
-        { error: 'App limit reached for your plan. Upgrade to create more apps.' },
+        { error: 'App limit reached for your plan.' },
         { status: 403 }
       );
     }

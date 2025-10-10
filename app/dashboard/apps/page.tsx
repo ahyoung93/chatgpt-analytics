@@ -155,6 +155,79 @@ export default function AppsPage() {
           </div>
         )}
 
+        {/* Universal Integration Guide - Only show if apps exist */}
+        {!loading && apps.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">📍 Integration Guide</h2>
+            <p className="text-gray-700 mb-6">
+              Follow these steps once to track all analytics (events, revenue, prompts, retention) across your apps.
+            </p>
+
+            <div className="space-y-4">
+              {/* Step 1 */}
+              <div className="bg-white rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-2">1. Add Action to your ChatGPT</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  In ChatGPT → Configure → Actions → Add new action
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-white rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-2">2. Use this API endpoint</h3>
+                <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs overflow-x-auto mb-2">
+                  <pre>{`POST https://chatgpt-analytics-plum.vercel.app/api/track
+
+Headers:
+  x-app-key: <your-write-key-from-above>
+  Content-Type: application/json`}</pre>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-white rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-2">3. Track events with this body format</h3>
+                <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs overflow-x-auto">
+                  <pre>{`{
+  "event": "invoked" | "completed" | "error" | "converted",
+  "name": "descriptive_name",
+
+  // Optional - for revenue tracking
+  "revenue": 29.99,
+  "currency": "USD",
+
+  // Optional - for prompt pattern analysis (hash on your end)
+  "prompt_hash": "sha256_hash_of_prompt",
+
+  // Optional - for user retention (hash on your end)
+  "user_hash": "sha256_hash_of_user_id",
+
+  // Optional - for performance tracking
+  "latency_ms": 1200
+}`}</pre>
+                </div>
+                <div className="mt-3 text-sm text-gray-600">
+                  <p className="mb-2"><strong>Event types:</strong></p>
+                  <ul className="space-y-1 ml-4 list-disc">
+                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">invoked</code> - When GPT is called</li>
+                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">completed</code> - Task finished successfully</li>
+                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">error</code> - Something failed</li>
+                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">converted</code> - User achieved their goal (include revenue here)</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="bg-white rounded-lg p-4">
+                <h3 className="font-semibold text-green-700 mb-2">✓ That&apos;s it!</h3>
+                <p className="text-sm text-gray-600">
+                  All features (Dashboard, Revenue, Prompts, Retention, Benchmarks) will automatically populate as data comes in. Include optional fields to enable specific features.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -219,43 +292,6 @@ export default function AppsPage() {
                   </code>
                 </div>
 
-                {/* Integration Instructions */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-3">📍 Quick Setup (2 minutes)</h4>
-                  <div className="space-y-3 text-sm text-blue-900">
-                    <div className="bg-white bg-opacity-50 rounded p-3">
-                      <p className="font-semibold mb-1">1. Add to your GPT Actions</p>
-                      <p className="text-blue-800">In ChatGPT → Configure → Actions → Add new action</p>
-                    </div>
-                    <div className="bg-white bg-opacity-50 rounded p-3">
-                      <p className="font-semibold mb-2">2. Use this API call:</p>
-                      <pre className="bg-blue-900 text-blue-50 p-2 rounded text-xs overflow-x-auto">
-{`POST https://chatgpt-analytics-plum.vercel.app/api/track
-Headers:
-  x-app-key: ${app.write_key.substring(0, 20)}...
-  Content-Type: application/json
-
-Body:
-{
-  "event": "invoked",
-  "name": "User started conversation"
-}`}
-                      </pre>
-                    </div>
-                    <div className="bg-white bg-opacity-50 rounded p-3">
-                      <p className="font-semibold mb-1">3. Track events:</p>
-                      <ul className="text-blue-800 space-y-1 ml-4 list-disc">
-                        <li><code className="bg-blue-100 px-1 rounded">invoked</code> - When GPT is called</li>
-                        <li><code className="bg-blue-100 px-1 rounded">completed</code> - Task finished</li>
-                        <li><code className="bg-blue-100 px-1 rounded">error</code> - Something failed</li>
-                        <li><code className="bg-blue-100 px-1 rounded">converted</code> - User goal achieved</li>
-                      </ul>
-                    </div>
-                    <div className="bg-white bg-opacity-50 rounded p-3">
-                      <p className="font-semibold text-green-700">✓ That&apos;s it! View analytics in your dashboard</p>
-                    </div>
-                  </div>
-                </div>
 
                 <div className="text-sm text-gray-500">
                   Created {new Date(app.created_at).toLocaleDateString()}

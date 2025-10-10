@@ -37,34 +37,6 @@ export default function PromptsPage() {
           </p>
         </div>
 
-        {/* Setup Guide */}
-        {patterns.length === 0 && (
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-8">
-            <h3 className="text-lg font-bold text-purple-900 mb-3">Start Tracking Prompt Patterns</h3>
-            <p className="text-purple-800 mb-4">
-              To track prompts, add a <code className="bg-purple-100 px-2 py-1 rounded">prompt_hash</code> field to your events. Hash the user prompt using SHA-256 before sending:
-            </p>
-            <div className="bg-white rounded-lg p-4">
-              <pre className="text-sm text-gray-900 font-mono">{`// Hash the prompt
-const promptHash = crypto
-  .createHash('sha256')
-  .update(userPrompt)
-  .digest('hex');
-
-// Include in event
-{
-  "event": "invoked",
-  "prompt_hash": promptHash
-}`}</pre>
-            </div>
-            <div className="bg-purple-100 rounded p-3 text-sm text-purple-900 mt-4">
-              <strong>Privacy Note:</strong> Prompt hashes are one-way - Odin cannot reverse them to see the original prompts.
-            </div>
-            <p className="text-purple-800 mt-4">
-              Need help getting started? Visit the <a href="/dashboard/apps" className="font-semibold underline">Apps tab</a> for complete integration instructions.
-            </p>
-          </div>
-        )}
 
         {/* Prompt Patterns Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

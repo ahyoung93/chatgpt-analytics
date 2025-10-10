@@ -65,11 +65,56 @@ export default function EventsPage() {
   const handleExportCSV = () => {
     if (currentPlan === 'free') {
       // Show upgrade modal
-      alert('CSV export is available on Pro and Team plans. Please upgrade to access this feature.');
+      alert('CSV export is available on Pro plan. Please upgrade to access this feature.');
       return;
     }
-    // TODO: Implement actual CSV export
-    console.log('Exporting CSV...');
+
+    // Export filtered events to CSV
+    if (filteredEvents.length === 0) {
+      alert('No events to export');
+      return;
+    }
+
+    // Create CSV header
+    const headers = ['Timestamp', 'Event Type', 'App', 'Source', 'Country', 'Latency (ms)', 'Error Message', 'Properties'];
+
+    // Create CSV rows
+    const rows = filteredEvents.map(event => [
+      new Date(event.timestamp).toISOString(),
+      event.event_type,
+      event.app_name,
+      event.properties?.source || '',
+      event.properties?.country || '',
+      event.latency_ms || '',
+      event.error_message || '',
+      JSON.stringify(event.properties || {})
+    ]);
+
+    // Combine header and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => {
+        // Escape cells that contain commas, quotes, or newlines
+        const cellStr = String(cell);
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `odin-events-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -210,7 +255,7 @@ export default function EventsPage() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Unlock CSV Export</h3>
                 <p className="text-gray-700 mb-4">
-                  Export your events data to CSV format with a Pro or Team plan. Analyze your data in Excel, Google Sheets, or your favorite tools.
+                  Export your events data to CSV format with a Pro plan. Analyze your data in Excel, Google Sheets, or your favorite tools.
                 </p>
                 <a
                   href="/pricing"

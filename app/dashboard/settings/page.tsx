@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Building2, Code, Shield, Trash2, Copy, Check } from 'lucide-react';
+import { Building2, Shield, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface App {
   id: string;
   name: string;
   category: string;
-  write_key?: string;
 }
 
 export default function SettingsPage() {
@@ -17,7 +16,6 @@ export default function SettingsPage() {
   const [orgName, setOrgName] = useState('My Organization');
   const [selectedApp, setSelectedApp] = useState('');
   const [optInBenchmarks, setOptInBenchmarks] = useState(true);
-  const [copied, setCopied] = useState(false);
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,25 +53,6 @@ export default function SettingsPage() {
   }, [orgId]);
 
   const selectedAppData = apps.find(app => app.id === selectedApp);
-
-  const sdkCode = `import { createClient } from '@odin-analytics/sdk';
-
-// Initialize with your app's write key
-const analytics = createClient({
-  appKey: '${selectedAppData?.write_key || 'sk_your_write_key_here'}'
-});
-
-// Track events
-await analytics.invoked();
-await analytics.completed({ latency_ms: 1200 });
-await analytics.error('API timeout');
-await analytics.converted('purchase_completed');`;
-
-  const copyCode = () => {
-    navigator.clipboard.writeText(sdkCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const handleDeleteApp = async () => {
     if (!selectedApp || !selectedAppData) {
@@ -142,72 +121,6 @@ await analytics.converted('purchase_completed');`;
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 Save Changes
               </button>
-            </div>
-          </div>
-
-          {/* SDK Integration */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Code className="w-6 h-6 text-gray-600" />
-              <h2 className="text-xl font-bold text-gray-900">SDK Integration</h2>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="appSelect" className="block text-sm font-medium text-gray-700 mb-2">
-                  Select App
-                </label>
-                {loading ? (
-                  <div className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-400">
-                    Loading apps...
-                  </div>
-                ) : apps.length === 0 ? (
-                  <div className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-400">
-                    No apps found. Create an app first.
-                  </div>
-                ) : (
-                  <select
-                    id="appSelect"
-                    value={selectedApp}
-                    onChange={(e) => setSelectedApp(e.target.value)}
-                    className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                  >
-                    {apps.map(app => (
-                      <option key={app.id} value={app.id}>{app.name}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Integration Code
-                  </label>
-                  <button
-                    onClick={copyCode}
-                    className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy Code
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
-                  <pre>{sdkCode}</pre>
-                </div>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-gray-700">
-                  <strong>Installation:</strong> Run <code className="bg-white px-2 py-0.5 rounded">npm install @odin-analytics/sdk</code> to get started.
-                </p>
-              </div>
             </div>
           </div>
 

@@ -41,13 +41,11 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            <span className="text-blue-600">Odin</span>
-            <br />
             Analytics for ChatGPT Apps
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Track performance, reliability, and user adoption of your Custom GPTs,
-            Plugins, and MCP servers. Privacy-first analytics with category benchmarks.
+            Track events, revenue, user retention, and prompt patterns for your Custom GPTs.
+            Privacy-first analytics with category benchmarks.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Link
@@ -72,10 +70,10 @@ export default function HomePage() {
               <BarChart3 className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              App Performance
+              Events & Revenue
             </h3>
             <p className="text-gray-600">
-              Track invoked, completed, error, and conversion events for your ChatGPT apps.
+              Track invocations, completions, errors, conversions, and revenue across all your events.
             </p>
           </div>
 
@@ -84,10 +82,10 @@ export default function HomePage() {
               <TrendingUp className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Category Benchmarks
+              Retention & Prompts
             </h3>
             <p className="text-gray-600">
-              Compare your app against others in your category with privacy-protected benchmarks.
+              See user retention over time and discover popular query patterns with privacy-preserving hashes.
             </p>
           </div>
 
@@ -96,10 +94,10 @@ export default function HomePage() {
               <Shield className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Privacy-First
+              Category Benchmarks
             </h3>
             <p className="text-gray-600">
-              No PII, no raw prompts. K-anonymity protection for benchmarks (≥7 apps required).
+              Compare your app against others in your category with k-anonymity protection (≥5 apps required).
             </p>
           </div>
 
@@ -108,25 +106,34 @@ export default function HomePage() {
               <Zap className="w-6 h-6 text-orange-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Simple SDK
+              2 Minutes Setup
             </h3>
             <p className="text-gray-600">
-              Just 3 lines of code. Works with Custom GPTs, Plugins, and MCP servers.
+              Connect in under 2 minutes with one API call to your ChatGPT Action.
             </p>
           </div>
         </div>
 
         {/* Code Example */}
         <div className="mt-24 bg-gray-900 rounded-2xl p-8 text-white">
-          <h2 className="text-2xl font-bold mb-6">Get Started in Seconds</h2>
-          <pre className="bg-black/30 p-6 rounded-lg overflow-x-auto">
-            <code>{`import { createClient } from '@odin-analytics/sdk';
+          <h2 className="text-2xl font-bold mb-6">Get Started in 2 Minutes</h2>
+          <pre className="bg-black/30 p-6 rounded-lg overflow-x-auto text-sm">
+            <code>{`// Add this to your ChatGPT Action
+POST https://chatgpt-analytics-plum.vercel.app/api/track
 
-const analytics = createClient({ appKey: 'sk_...' });
+Headers:
+  x-app-key: your_api_key_here
+  Content-Type: application/json
 
-await analytics.track('invoked');
-await analytics.track('completed', { latency_ms: 1200 });
-await analytics.track('converted', { name: 'purchase' });`}</code>
+Body:
+{
+  "event": "invoked",
+  "name": "user_started_conversation",
+  "revenue": 29.99,
+  "user_hash": "sha256_hash",
+  "prompt_hash": "sha256_hash",
+  "latency_ms": 1200
+}`}</code>
           </pre>
         </div>
 

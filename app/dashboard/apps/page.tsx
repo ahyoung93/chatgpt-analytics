@@ -168,69 +168,135 @@ export default function AppsPage() {
               <div className="bg-white rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-2">1. Copy your API key</h3>
                 <p className="text-sm text-gray-600">
-                  Each app has its own unique API key shown above. Click the copy icon to copy it.
+                  Each app has its own unique API key shown in the card above. Click the copy icon to copy it. You&apos;ll paste this in step 3.
                 </p>
               </div>
 
               {/* Step 2 */}
               <div className="bg-white rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">2. Add Action to your ChatGPT</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">2. Add this OpenAPI schema to your Custom GPT</h3>
                 <p className="text-sm text-gray-600 mb-3">
-                  In ChatGPT → Configure → Actions → Add new action with this endpoint:
+                  In ChatGPT → Configure → Actions → Create new action → paste this schema:
                 </p>
                 <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs overflow-x-auto">
-                  <pre>{`POST https://chatgpt-analytics-plum.vercel.app/api/track
-
-Headers:
-  x-app-key: YOUR_API_KEY_HERE
-  Content-Type: application/json`}</pre>
+                  <pre>{`{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Odin Analytics API",
+    "description": "Track events for ChatGPT analytics",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://chatgpt-analytics-plum.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/track": {
+      "post": {
+        "summary": "Track an analytics event",
+        "operationId": "trackEvent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["event"],
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "enum": ["invoked", "completed", "error", "converted"],
+                    "description": "Type of event to track"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Custom event name"
+                  },
+                  "revenue": {
+                    "type": "number",
+                    "description": "Revenue amount in dollars"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "USD"
+                  },
+                  "prompt_hash": {
+                    "type": "string",
+                    "description": "SHA-256 hash of the user prompt"
+                  },
+                  "user_hash": {
+                    "type": "string",
+                    "description": "SHA-256 hash of the user ID"
+                  },
+                  "latency_ms": {
+                    "type": "number",
+                    "description": "Response latency in milliseconds"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event tracked successfully"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-app-key"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ]
+}`}</pre>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Replace <code className="bg-gray-100 px-1.5 py-0.5 rounded">YOUR_API_KEY_HERE</code> with the API key you copied in step 1.
-                </p>
               </div>
 
               {/* Step 3 */}
               <div className="bg-white rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">3. Track events with this body format</h3>
-                <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs overflow-x-auto">
-                  <pre>{`{
-  "event": "invoked",
-  "name": "user_started_conversation",
-  "revenue": 29.99,
-  "currency": "USD",
-  "prompt_hash": "sha256_hash_of_prompt",
-  "user_hash": "sha256_hash_of_user_id",
-  "latency_ms": 1200
-}`}</pre>
-                </div>
-                <div className="mt-3 text-sm text-gray-600 space-y-3">
-                  <div>
-                    <p className="font-semibold mb-1">Event types (required):</p>
-                    <ul className="space-y-1 ml-4 list-disc">
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">invoked</code> - When GPT is called</li>
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">completed</code> - Task finished successfully</li>
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">error</code> - Something failed</li>
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">converted</code> - User achieved their goal (include revenue)</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="font-semibold mb-1">Additional fields:</p>
-                    <ul className="space-y-1 ml-4 list-disc">
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">revenue</code> - Dollar amount for Revenue analytics</li>
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">prompt_hash</code> - SHA-256 hash for Prompt analytics</li>
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">user_hash</code> - SHA-256 hash for Retention analytics</li>
-                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">latency_ms</code> - Response time in milliseconds</li>
-                    </ul>
-                  </div>
-                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">3. Configure authentication</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  In the Action authentication settings:
+                </p>
+                <ol className="text-sm text-gray-600 space-y-2 ml-4 list-decimal">
+                  <li>Click the Authentication dropdown and select <strong>&quot;API Key&quot;</strong></li>
+                  <li>Select <strong>&quot;Custom&quot;</strong> as the Auth Type</li>
+                  <li>In the API Key field, paste your API key from step 1</li>
+                  <li>In the Custom Header Name field, enter: <code className="bg-gray-100 px-1.5 py-0.5 rounded">x-app-key</code></li>
+                </ol>
               </div>
 
               {/* Step 4 */}
               <div className="bg-white rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-2">4. Test your integration</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  In your Custom GPT instructions, add code to call the trackEvent action:
+                </p>
+                <div className="bg-gray-50 border border-gray-200 p-3 rounded text-xs">
+                  <p className="text-gray-700 mb-2">Example instructions to add to your GPT:</p>
+                  <p className="text-gray-600 italic">
+                    &quot;When a user starts a conversation, call trackEvent with event=&apos;invoked&apos;. When you complete a task, call trackEvent with event=&apos;completed&apos;.&quot;
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 5 */}
+              <div className="bg-white rounded-lg p-4">
                 <h3 className="font-semibold text-green-700 mb-2">✓ That&apos;s it!</h3>
                 <p className="text-sm text-gray-600">
-                  All dashboard features will automatically populate as data comes in. View your analytics across all tabs.
+                  Your Custom GPT will now automatically track events. View your analytics across all dashboard tabs: Events, Revenue, Prompts, Retention, and Benchmarks.
                 </p>
               </div>
             </div>

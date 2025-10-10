@@ -65,7 +65,7 @@ export default function BenchmarksPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Category Benchmarks</h1>
           <p className="text-gray-600">
-            Compare your app&apos;s performance against others in your category. Data will appear here once you connect your app and enough apps join your category.
+            Compare your app&apos;s performance against others in your category.
           </p>
         </div>
 

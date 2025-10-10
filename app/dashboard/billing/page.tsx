@@ -129,20 +129,22 @@ export default function BillingPage() {
   };
 
   const handleManageBilling = async () => {
+    if (!orgId) {
+      alert('Please sign in to manage billing');
+      return;
+    }
+
     setLoading(true);
     try {
-      // TODO: Call Stripe customer portal API
-      const response = await fetch('/api/billing/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          returnUrl: `${window.location.origin}/dashboard/billing`
-        })
+      const response = await fetch(`/api/billing?orgId=${orgId}`, {
+        method: 'GET'
       });
 
       const data = await response.json();
       if (data.success && data.url) {
         window.location.href = data.url;
+      } else {
+        alert('Failed to open billing portal: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Portal error:', error);

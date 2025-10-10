@@ -1,5 +1,5 @@
 -- ChatGPT App Analytics Platform Database Schema
--- For tracking ChatGPT App performance (not conversation analytics)
+-- For tracking ChatGPT App performance
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -7,38 +7,50 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ============================================
 -- APP CATEGORIES (ENUM)
 -- ============================================
-CREATE TYPE app_category AS ENUM (
-    'travel',
-    'productivity',
-    'dev_tools',
-    'shopping',
-    'education',
-    'entertainment',
-    'customer_support',
-    'content_generation',
-    'data_analysis',
-    'other'
-);
+DO $$ BEGIN
+    CREATE TYPE app_category AS ENUM (
+        'travel',
+        'productivity',
+        'dev_tools',
+        'shopping',
+        'education',
+        'entertainment',
+        'customer_support',
+        'content_generation',
+        'data_analysis',
+        'other'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- ============================================
 -- EVENT TYPES (ENUM)
 -- ============================================
-CREATE TYPE event_type AS ENUM (
-    'invoked',      -- App was called
-    'completed',    -- App succeeded
-    'error',        -- App failed
-    'converted',    -- User achieved goal
-    'custom'        -- Developer-defined event
-);
+DO $$ BEGIN
+    CREATE TYPE event_type AS ENUM (
+        'invoked',      -- App was called
+        'completed',    -- App succeeded
+        'error',        -- App failed
+        'converted',    -- User achieved goal
+        'custom'        -- Developer-defined event
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- ============================================
 -- PLAN TIERS (ENUM)
 -- ============================================
-CREATE TYPE plan_tier AS ENUM (
-    'free',         -- 7 days retention, 1 app
-    'pro',          -- 90 days retention, 5 apps, benchmarks, CSV
-    'team'          -- 180 days retention, unlimited apps
-);
+DO $$ BEGIN
+    CREATE TYPE plan_tier AS ENUM (
+        'free',         -- 7 days retention, 1 app
+        'pro',          -- 90 days retention, 5 apps, benchmarks, CSV
+        'team'          -- 180 days retention, unlimited apps
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- ============================================
 -- ORGANIZATIONS TABLE
@@ -46,7 +58,7 @@ CREATE TYPE plan_tier AS ENUM (
 CREATE TABLE IF NOT EXISTS orgs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
-    slug TEXT UNIQUE NOT NULL,
+    slug TEXT UNIQUE,
     plan plan_tier DEFAULT 'free' NOT NULL,
     stripe_customer_id TEXT UNIQUE,
     subscription_id TEXT,
@@ -69,6 +81,15 @@ CREATE TABLE IF NOT EXISTS org_members (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(org_id, email)
 );
+
+-- Add user_id column if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name='org_members' AND column_name='user_id') THEN
+        ALTER TABLE org_members ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 -- ============================================
 -- APPS TABLE (Developer's ChatGPT Apps)
@@ -178,6 +199,7 @@ CREATE INDEX IF NOT EXISTS idx_orgs_slug ON orgs(slug);
 CREATE INDEX IF NOT EXISTS idx_orgs_stripe_customer_id ON orgs(stripe_customer_id);
 
 CREATE INDEX IF NOT EXISTS idx_org_members_org_id ON org_members(org_id);
+CREATE INDEX IF NOT EXISTS idx_org_members_user_id ON org_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_org_members_email ON org_members(email);
 
 CREATE INDEX IF NOT EXISTS idx_apps_org_id ON apps(org_id);
@@ -411,32 +433,43 @@ ALTER TABLE app_daily_metrics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE category_daily_benchmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS orgs_select_member ON orgs;
+DROP POLICY IF EXISTS org_members_select_own ON org_members;
+DROP POLICY IF EXISTS apps_select_own_org ON apps;
+DROP POLICY IF EXISTS apps_insert_own_org ON apps;
+DROP POLICY IF EXISTS apps_update_own_org ON apps;
+DROP POLICY IF EXISTS events_select_own_apps ON events;
+DROP POLICY IF EXISTS app_daily_metrics_select_own ON app_daily_metrics;
+DROP POLICY IF EXISTS category_benchmarks_select_pro_team ON category_daily_benchmarks;
+DROP POLICY IF EXISTS subscriptions_select_own_org ON subscriptions;
+
 -- Orgs: Members can read their own org
 CREATE POLICY orgs_select_member ON orgs
     FOR SELECT USING (
-        id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+        id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid())
     );
 
 -- Org members: Can read members of own org
 CREATE POLICY org_members_select_own ON org_members
     FOR SELECT USING (
-        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+        org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid())
     );
 
 -- Apps: Members can manage apps in their org
 CREATE POLICY apps_select_own_org ON apps
     FOR SELECT USING (
-        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+        org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid())
     );
 
 CREATE POLICY apps_insert_own_org ON apps
     FOR INSERT WITH CHECK (
-        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+        org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid())
     );
 
 CREATE POLICY apps_update_own_org ON apps
     FOR UPDATE USING (
-        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+        org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid())
     );
 
 -- Events: Members can read events for their apps
@@ -445,7 +478,7 @@ CREATE POLICY events_select_own_apps ON events
         app_id IN (
             SELECT a.id FROM apps a
             JOIN org_members om ON a.org_id = om.org_id
-            WHERE om.email = current_setting('app.user_email', true)
+            WHERE om.user_id = auth.uid()
         )
     );
 
@@ -455,7 +488,7 @@ CREATE POLICY app_daily_metrics_select_own ON app_daily_metrics
         app_id IN (
             SELECT a.id FROM apps a
             JOIN org_members om ON a.org_id = om.org_id
-            WHERE om.email = current_setting('app.user_email', true)
+            WHERE om.user_id = auth.uid()
         )
     );
 
@@ -465,7 +498,7 @@ CREATE POLICY category_benchmarks_select_pro_team ON category_daily_benchmarks
         EXISTS (
             SELECT 1 FROM orgs o
             JOIN org_members om ON o.id = om.org_id
-            WHERE om.email = current_setting('app.user_email', true)
+            WHERE om.user_id = auth.uid()
                 AND o.plan IN ('pro', 'team')
         )
     );
@@ -473,7 +506,7 @@ CREATE POLICY category_benchmarks_select_pro_team ON category_daily_benchmarks
 -- Subscriptions: Members can read their org's subscription
 CREATE POLICY subscriptions_select_own_org ON subscriptions
     FOR SELECT USING (
-        org_id IN (SELECT org_id FROM org_members WHERE email = current_setting('app.user_email', true))
+        org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid())
     );
 
 -- ============================================

@@ -8,11 +8,16 @@ export type Json =
   | Json[]
 
 export type AppCategory =
-  | 'travel'
+  | 'writing'
   | 'productivity'
+  | 'research_analysis'
+  | 'education'
+  | 'lifestyle'
+  | 'dalle'
+  | 'programming'
+  | 'travel'
   | 'dev_tools'
   | 'shopping'
-  | 'education'
   | 'entertainment'
   | 'customer_support'
   | 'content_generation'

@@ -7,11 +7,16 @@ import { randomBytes } from 'crypto';
 const createAppSchema = z.object({
   name: z.string().min(1, 'App name is required'),
   category: z.enum([
-    'travel',
+    'writing',
     'productivity',
+    'research_analysis',
+    'education',
+    'lifestyle',
+    'dalle',
+    'programming',
+    'travel',
     'dev_tools',
     'shopping',
-    'education',
     'entertainment',
     'customer_support',
     'content_generation',

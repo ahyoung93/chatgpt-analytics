@@ -16,46 +16,7 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: '1',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      event_type: 'completed',
-      app_name: 'Travel Assistant',
-      latency_ms: 1200,
-      properties: { source: 'web', country: 'US' }
-    },
-    {
-      id: '2',
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      event_type: 'invoked',
-      app_name: 'Code Helper',
-      properties: { source: 'api', country: 'UK' }
-    },
-    {
-      id: '3',
-      timestamp: new Date(Date.now() - 10800000).toISOString(),
-      event_type: 'error',
-      app_name: 'Shopping Bot',
-      error_message: 'API timeout',
-      properties: { source: 'mobile', country: 'CA' }
-    },
-    {
-      id: '4',
-      timestamp: new Date(Date.now() - 14400000).toISOString(),
-      event_type: 'converted',
-      app_name: 'Shopping Bot',
-      properties: { source: 'web', country: 'US', conversion: 'purchase' }
-    },
-    {
-      id: '5',
-      timestamp: new Date(Date.now() - 18000000).toISOString(),
-      event_type: 'completed',
-      app_name: 'Travel Assistant',
-      latency_ms: 980,
-      properties: { source: 'api', country: 'DE' }
-    },
-  ]);
+  const [events, setEvents] = useState<Event[]>([]);
 
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -170,7 +131,8 @@ export default function EventsPage() {
                 {filteredEvents.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      No events found
+                      <p className="mb-2">No events yet</p>
+                      <p className="text-sm">Data will appear here once you connect your app</p>
                     </td>
                   </tr>
                 ) : (

@@ -32,15 +32,15 @@ export default function BenchmarksPage() {
     // TODO: Replace with actual API call
     setTimeout(() => {
       setBenchmarkData({
-        available: true,
-        category: 'Productivity',
-        your_success_rate: 0.94,
-        category_avg_success_rate: 0.87,
-        your_p50_latency: 1100,
-        your_p75_latency: 1450,
-        category_p50_latency: 1350,
-        category_p75_latency: 1780,
-        app_count: 15
+        available: false,
+        category: '',
+        your_success_rate: 0,
+        category_avg_success_rate: 0,
+        your_p50_latency: 0,
+        your_p75_latency: 0,
+        category_p50_latency: 0,
+        category_p75_latency: 0,
+        app_count: 0
       });
       setLoading(false);
     }, 500);
@@ -62,7 +62,12 @@ export default function BenchmarksPage() {
   return (
     <DashboardLayout>
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Category Benchmarks</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Category Benchmarks</h1>
+          <p className="text-gray-600">
+            Compare your app&apos;s performance against others in your category. Data will appear here once you connect your app and enough apps join your category.
+          </p>
+        </div>
 
         {!hasPro ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
@@ -87,10 +92,10 @@ export default function BenchmarksPage() {
         ) : !benchmarkData?.available ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
             <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Not Enough Data</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Benchmarks Coming Soon</h2>
             <p className="text-gray-600 max-w-md mx-auto">
-              Benchmarks require at least 7 apps in your category for privacy protection (k-anonymity).
-              Check back as more apps join the {benchmarkData?.category || 'your'} category.
+              Benchmarks require at least 5 apps in your category for privacy protection (k-anonymity ≥ 5).
+              Data will appear here once enough apps join your category.
             </p>
           </div>
         ) : (
@@ -99,7 +104,7 @@ export default function BenchmarksPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-gray-700">
                 <strong>Privacy Protected:</strong> Benchmarks are calculated from {benchmarkData.app_count} apps in the {benchmarkData.category} category.
-                All data is anonymized with k-anonymity protection (k ≥ 7).
+                All data is anonymized with k-anonymity protection (k ≥ 5).
               </p>
             </div>
 

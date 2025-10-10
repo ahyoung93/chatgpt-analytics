@@ -56,6 +56,10 @@ export async function createStripeCustomer(
   name?: string,
   orgId?: string
 ) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
   const customer = await stripe.customers.create({
     email,
     name,
@@ -71,6 +75,10 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
@@ -93,6 +101,10 @@ export async function createBillingPortalSession(
   customerId: string,
   returnUrl: string
 ) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
@@ -106,6 +118,10 @@ export function constructWebhookEvent(
   signature: string,
   webhookSecret: string
 ) {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }
 

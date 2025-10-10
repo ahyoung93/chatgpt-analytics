@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Check, Crown, Zap, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,8 @@ export default function BillingPage() {
   const { orgId } = useAuth();
   const [currentPlan, setCurrentPlan] = useState<'free' | 'pro' | 'team'>('free');
   const [loading, setLoading] = useState(false);
+  const [appsCount, setAppsCount] = useState(0);
+  const [loadingData, setLoadingData] = useState(true);
 
   const plans = {
     free: {
@@ -23,7 +25,6 @@ export default function BillingPage() {
       ],
       limits: {
         apps: 1,
-        appsUsed: 0,
         retention: '7 days'
       }
     },
@@ -41,7 +42,6 @@ export default function BillingPage() {
       ],
       limits: {
         apps: 5,
-        appsUsed: 2,
         retention: '90 days'
       }
     },
@@ -60,11 +60,29 @@ export default function BillingPage() {
       ],
       limits: {
         apps: Infinity,
-        appsUsed: 2,
         retention: '180 days'
       }
     }
   };
+
+  useEffect(() => {
+    const fetchAppsCount = async () => {
+      try {
+        setLoadingData(true);
+        const response = await fetch('/api/apps');
+        if (response.ok) {
+          const data = await response.json();
+          setAppsCount(data.apps?.length || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching apps count:', error);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchAppsCount();
+  }, []);
 
   const handleUpgrade = async (plan: 'pro' | 'team') => {
     if (!orgId) {
@@ -166,18 +184,24 @@ export default function BillingPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <p className="text-sm text-gray-600 mb-2">Apps Used</p>
             <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-3xl font-bold text-gray-900">{currentPlanData.limits.appsUsed}</span>
-              <span className="text-gray-600">
-                / {currentPlanData.limits.apps === Infinity ? '∞' : currentPlanData.limits.apps}
-              </span>
+              {loadingData ? (
+                <span className="text-3xl font-bold text-gray-400">...</span>
+              ) : (
+                <>
+                  <span className="text-3xl font-bold text-gray-900">{appsCount}</span>
+                  <span className="text-gray-600">
+                    / {currentPlanData.limits.apps === Infinity ? '∞' : currentPlanData.limits.apps}
+                  </span>
+                </>
+              )}
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full"
                 style={{
                   width: currentPlanData.limits.apps === Infinity
-                    ? '20%'
-                    : `${(currentPlanData.limits.appsUsed / currentPlanData.limits.apps) * 100}%`
+                    ? `${Math.min((appsCount / 10) * 100, 100)}%`
+                    : `${Math.min((appsCount / currentPlanData.limits.apps) * 100, 100)}%`
                 }}
               ></div>
             </div>

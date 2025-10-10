@@ -1,14 +1,13 @@
 // Stripe integration for ChatGPT App Analytics
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set');
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-  typescript: true,
-});
+// Make Stripe optional - only initialize if key is present
+export const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+      typescript: true,
+    })
+  : null;
 
 // Pricing plans for App Analytics
 export const PRICING_PLANS = {
@@ -25,7 +24,7 @@ export const PRICING_PLANS = {
   },
   pro: {
     name: 'Pro',
-    price: 49,
+    price: 19,
     priceId: process.env.STRIPE_PRICE_ID_PRO,
     features: [
       '90 days data retention',
@@ -38,7 +37,7 @@ export const PRICING_PLANS = {
   },
   team: {
     name: 'Team',
-    price: 99,
+    price: 59,
     priceId: process.env.STRIPE_PRICE_ID_TEAM,
     features: [
       '180 days data retention',

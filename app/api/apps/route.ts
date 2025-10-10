@@ -13,17 +13,8 @@ const createAppSchema = z.object({
     'education',
     'lifestyle',
     'dalle',
-    'programming',
-    'travel',
-    'dev_tools',
-    'shopping',
-    'entertainment',
-    'customer_support',
-    'content_generation',
-    'data_analysis',
-    'other'
-  ]),
-  description: z.string().optional()
+    'programming'
+  ])
 });
 
 // GET /api/apps - Fetch all apps for the authenticated user's org
@@ -134,7 +125,6 @@ export async function POST(request: NextRequest) {
         org_id: orgMember.org_id,
         name: validatedData.name,
         category: validatedData.category,
-        description: validatedData.description,
         write_key: writeKey,
         rate_limit_per_sec: 10, // Default rate limit
         is_active: true

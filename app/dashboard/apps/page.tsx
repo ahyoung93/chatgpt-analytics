@@ -19,14 +19,10 @@ export default function AppsPage() {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [detectingCategory, setDetectingCategory] = useState(false);
   const [newApp, setNewApp] = useState({
     name: '',
-    description: '',
-    category: 'other' as string
+    category: 'writing' as string
   });
-  const [categoryDetected, setCategoryDetected] = useState(false);
-  const [categoryReasoning, setCategoryReasoning] = useState('');
 
   const categories = [
     'writing',
@@ -35,8 +31,7 @@ export default function AppsPage() {
     'education',
     'lifestyle',
     'dalle',
-    'programming',
-    'other'
+    'programming'
   ];
 
   useEffect(() => {
@@ -60,41 +55,6 @@ export default function AppsPage() {
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDetectCategory = async () => {
-    if (!newApp.name && !newApp.description) {
-      return;
-    }
-
-    try {
-      setDetectingCategory(true);
-      setError(null);
-
-      const response = await fetch('/api/detect-category', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: newApp.name,
-          description: newApp.description
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setNewApp({ ...newApp, category: data.category });
-        setCategoryDetected(true);
-        setCategoryReasoning(data.reasoning);
-      }
-    } catch (err: any) {
-      console.error('Error detecting category:', err);
-      // Silent fail - user can still select manually
-    } finally {
-      setDetectingCategory(false);
     }
   };
 
@@ -122,9 +82,7 @@ export default function AppsPage() {
       // Success! Refresh the apps list
       await fetchApps();
       setShowModal(false);
-      setNewApp({ name: '', description: '', category: 'other' });
-      setCategoryDetected(false);
-      setCategoryReasoning('');
+      setNewApp({ name: '', category: 'writing' });
     } catch (err: any) {
       console.error('Error creating app:', err);
       setError(err.message);
@@ -291,10 +249,7 @@ export default function AppsPage() {
                     id="appName"
                     type="text"
                     value={newApp.name}
-                    onChange={(e) => {
-                      setNewApp({ ...newApp, name: e.target.value });
-                      setCategoryDetected(false);
-                    }}
+                    onChange={(e) => setNewApp({ ...newApp, name: e.target.value })}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
                     placeholder="My ChatGPT App"
@@ -302,45 +257,8 @@ export default function AppsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="appDescription" className="block text-sm font-medium text-gray-700 mb-2">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    id="appDescription"
-                    value={newApp.description}
-                    onChange={(e) => {
-                      setNewApp({ ...newApp, description: e.target.value });
-                      setCategoryDetected(false);
-                    }}
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
-                    placeholder="What does your ChatGPT app do?"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleDetectCategory}
-                    disabled={detectingCategory || (!newApp.name && !newApp.description)}
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
-                  >
-                    {detectingCategory ? (
-                      <>
-                        <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        Detecting category...
-                      </>
-                    ) : (
-                      '✨ Auto-detect category'
-                    )}
-                  </button>
-                  {categoryDetected && categoryReasoning && (
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
-                      <strong>AI Suggested:</strong> {categoryReasoning}
-                    </div>
-                  )}
-                </div>
-
-                <div>
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                    Category {categoryDetected && <span className="text-green-600">(AI-detected)</span>}
+                    Category
                   </label>
                   <select
                     id="category"
@@ -361,9 +279,7 @@ export default function AppsPage() {
                     type="button"
                     onClick={() => {
                       setShowModal(false);
-                      setNewApp({ name: '', description: '', category: 'other' });
-                      setCategoryDetected(false);
-                      setCategoryReasoning('');
+                      setNewApp({ name: '', category: 'writing' });
                     }}
                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >

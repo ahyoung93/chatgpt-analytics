@@ -15,14 +15,6 @@ export type AppCategory =
   | 'lifestyle'
   | 'dalle'
   | 'programming'
-  | 'travel'
-  | 'dev_tools'
-  | 'shopping'
-  | 'entertainment'
-  | 'customer_support'
-  | 'content_generation'
-  | 'data_analysis'
-  | 'other'
 
 export type EventType =
   | 'invoked'

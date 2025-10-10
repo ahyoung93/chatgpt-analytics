@@ -11,6 +11,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(false);
   const [appsCount, setAppsCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
 
   const plans = {
     free: {
@@ -59,12 +60,13 @@ export default function BillingPage() {
           setAppsCount(appsData.apps?.length || 0);
         }
 
-        // Fetch org to get current plan
+        // Fetch org to get current plan and billing date
         if (orgId) {
           const orgResponse = await fetch(`/api/orgs/${orgId}`);
           if (orgResponse.ok) {
             const orgData = await orgResponse.json();
             setCurrentPlan(orgData.org?.plan || 'free');
+            setNextBillingDate(orgData.org?.next_billing_date || null);
           }
         }
       } catch (error) {
@@ -215,7 +217,18 @@ export default function BillingPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <p className="text-sm text-gray-600 mb-2">Next Billing Date</p>
             <p className="text-xl font-bold text-gray-900">
-              {currentPlan === 'free' ? 'N/A' : 'Feb 1, 2024'}
+              {currentPlan === 'free'
+                ? 'N/A'
+                : loadingData
+                  ? '...'
+                  : nextBillingDate
+                    ? new Date(nextBillingDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })
+                    : 'N/A'
+              }
             </p>
           </div>
         </div>

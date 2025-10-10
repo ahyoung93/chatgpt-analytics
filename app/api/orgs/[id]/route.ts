@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServerClient } from '@/lib/supabase/server';
+import { stripe } from '@/lib/stripe';
 
 // GET /api/orgs/[id] - Fetch organization details
 export async function GET(
@@ -22,7 +23,7 @@ export async function GET(
     // Fetch org details
     const { data: org, error: orgError } = await supabase
       .from('orgs')
-      .select('id, name, plan, subscription_status, created_at')
+      .select('id, name, plan, subscription_status, subscription_id, stripe_customer_id, created_at')
       .eq('id', params.id)
       .single();
 
@@ -48,7 +49,26 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ org });
+    // If user has a subscription, fetch the next billing date from Stripe
+    let nextBillingDate = null;
+    if (stripe && org.subscription_id && org.plan !== 'free') {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(org.subscription_id);
+        if (subscription.current_period_end) {
+          nextBillingDate = new Date(subscription.current_period_end * 1000).toISOString();
+        }
+      } catch (stripeError) {
+        console.error('Error fetching subscription from Stripe:', stripeError);
+        // Continue without billing date if Stripe fails
+      }
+    }
+
+    return NextResponse.json({
+      org: {
+        ...org,
+        next_billing_date: nextBillingDate
+      }
+    });
   } catch (error: any) {
     console.error('Get org error:', error);
     return NextResponse.json(

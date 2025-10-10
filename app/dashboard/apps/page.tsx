@@ -17,6 +17,8 @@ export default function AppsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [newApp, setNewApp] = useState({
     name: '',
     category: 'other' as string
@@ -40,17 +42,79 @@ export default function AppsPage() {
   }, []);
 
   const fetchApps = async () => {
-    // TODO: Fetch actual apps from API
-    setLoading(false);
-    setApps([]);
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/apps');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch apps');
+      }
+
+      const data = await response.json();
+      setApps(data.apps || []);
+    } catch (err: any) {
+      console.error('Error fetching apps:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateApp = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to create app
-    console.log('Creating app:', newApp);
-    setShowModal(false);
-    setNewApp({ name: '', category: 'other' });
+
+    try {
+      setCreating(true);
+      setError(null);
+
+      const response = await fetch('/api/apps', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newApp)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create app');
+      }
+
+      // Success! Refresh the apps list
+      await fetchApps();
+      setShowModal(false);
+      setNewApp({ name: '', category: 'other' });
+    } catch (err: any) {
+      console.error('Error creating app:', err);
+      setError(err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDeleteApp = async (appId: string) => {
+    if (!confirm('Are you sure you want to delete this app? All associated events will be deleted.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/apps/${appId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete app');
+      }
+
+      // Success! Refresh the apps list
+      await fetchApps();
+    } catch (err: any) {
+      console.error('Error deleting app:', err);
+      setError(err.message);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -88,6 +152,12 @@ export default function AppsPage() {
           </button>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+            {error}
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -115,7 +185,10 @@ export default function AppsPage() {
                     <h3 className="text-xl font-bold text-gray-900 mb-1">{app.name}</h3>
                     <p className="text-sm text-gray-600">{formatCategory(app.category)}</p>
                   </div>
-                  <button className="text-red-600 hover:text-red-700">
+                  <button
+                    onClick={() => handleDeleteApp(app.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -163,6 +236,13 @@ export default function AppsPage() {
             <div className="bg-white rounded-lg max-w-md w-full p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Your App</h2>
               <p className="text-gray-600 mb-6">Enter your ChatGPT app details to get your tracking API key</p>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+                  {error}
+                </div>
+              )}
+
               <form onSubmit={handleCreateApp} className="space-y-4">
                 <div>
                   <label htmlFor="appName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -210,9 +290,10 @@ export default function AppsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={creating}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
                   >
-                    Connect App
+                    {creating ? 'Connecting...' : 'Connect App'}
                   </button>
                 </div>
               </form>

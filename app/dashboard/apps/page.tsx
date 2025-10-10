@@ -84,7 +84,7 @@ export default function AppsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Create App
+            Connect App
           </button>
         </div>
 
@@ -94,16 +94,16 @@ export default function AppsPage() {
           </div>
         ) : apps.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No apps yet</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">No apps connected yet</h2>
             <p className="text-gray-600 mb-6">
-              Create your first app to get started with Odin analytics
+              Connect your ChatGPT app to start tracking analytics with Odin
             </p>
             <button
               onClick={() => setShowModal(true)}
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Create Your First App
+              Connect Your First App
             </button>
           </div>
         ) : (
@@ -157,11 +157,12 @@ export default function AppsPage() {
           </div>
         )}
 
-        {/* Create App Modal */}
+        {/* Connect App Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-md w-full p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New App</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Your App</h2>
+              <p className="text-gray-600 mb-6">Enter your ChatGPT app details to start tracking analytics</p>
               <form onSubmit={handleCreateApp} className="space-y-4">
                 <div>
                   <label htmlFor="appName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -211,7 +212,7 @@ export default function AppsPage() {
                     type="submit"
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Create App
+                    Connect App
                   </button>
                 </div>
               </form>

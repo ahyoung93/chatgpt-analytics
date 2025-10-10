@@ -28,25 +28,11 @@ export const PRICING_PLANS = {
     priceId: process.env.STRIPE_PRICE_ID_PRO,
     features: [
       '90 days data retention',
-      'Up to 5 ChatGPT apps',
+      'Up to 3 ChatGPT apps',
       'Category benchmarks',
       'CSV data export',
       'Up to 100,000 events/month',
       'Email support'
-    ]
-  },
-  team: {
-    name: 'Team',
-    price: 59,
-    priceId: process.env.STRIPE_PRICE_ID_TEAM,
-    features: [
-      '180 days data retention',
-      'Unlimited ChatGPT apps',
-      'Category benchmarks',
-      'CSV data export',
-      'Unlimited events',
-      'Priority support',
-      'Team collaboration'
     ]
   }
 } as const;
@@ -125,8 +111,7 @@ export function constructWebhookEvent(
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }
 
-export function getPlanFromPriceId(priceId: string): 'free' | 'pro' | 'team' {
+export function getPlanFromPriceId(priceId: string): 'free' | 'pro' {
   if (priceId === PRICING_PLANS.pro.priceId) return 'pro';
-  if (priceId === PRICING_PLANS.team.priceId) return 'team';
   return 'free';
 }

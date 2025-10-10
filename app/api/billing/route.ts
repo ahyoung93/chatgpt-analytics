@@ -10,7 +10,7 @@ import { z } from 'zod';
 
 const checkoutRequestSchema = z.object({
   orgId: z.string(),
-  plan: z.enum(['pro', 'team']),
+  plan: z.enum(['pro']),
   successUrl: z.string().url().optional(),
   cancelUrl: z.string().url().optional()
 });

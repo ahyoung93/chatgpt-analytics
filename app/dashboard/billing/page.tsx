@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function BillingPage() {
   const { orgId } = useAuth();
-  const [currentPlan, setCurrentPlan] = useState<'free' | 'pro' | 'team'>('free');
+  const [currentPlan, setCurrentPlan] = useState<'free' | 'pro'>('free');
   const [loading, setLoading] = useState(false);
   const [appsCount, setAppsCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
@@ -34,33 +34,15 @@ export default function BillingPage() {
       description: 'For serious app developers',
       features: [
         '90 days data retention',
-        'Up to 5 ChatGPT apps',
+        'Up to 3 ChatGPT apps',
         'Category benchmarks',
         'CSV data export',
         'Up to 100,000 events/month',
         'Email support'
       ],
       limits: {
-        apps: 5,
+        apps: 3,
         retention: '90 days'
-      }
-    },
-    team: {
-      name: 'Team',
-      price: 59,
-      description: 'For teams building multiple apps',
-      features: [
-        '180 days data retention',
-        'Unlimited ChatGPT apps',
-        'Category benchmarks',
-        'CSV data export',
-        'Unlimited events',
-        'Priority support',
-        'Team collaboration'
-      ],
-      limits: {
-        apps: Infinity,
-        retention: '180 days'
       }
     }
   };
@@ -95,7 +77,7 @@ export default function BillingPage() {
     fetchData();
   }, [orgId]);
 
-  const handleUpgrade = async (plan: 'pro' | 'team') => {
+  const handleUpgrade = async (plan: 'pro') => {
     if (!orgId) {
       alert('Please sign in to upgrade your plan');
       return;
@@ -237,12 +219,12 @@ export default function BillingPage() {
         {currentPlan === 'free' && (
           <>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Upgrade Your Plan</h2>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="max-w-md mx-auto">
               {/* Pro Plan */}
               <div className="bg-white rounded-lg border-2 border-blue-600 p-8 relative">
                 <div className="absolute top-4 right-4">
                   <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
-                    Most Popular
+                    Recommended
                   </span>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{plans.pro.name}</h3>
@@ -265,31 +247,6 @@ export default function BillingPage() {
                   className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50"
                 >
                   {loading ? 'Processing...' : 'Upgrade to Pro'}
-                </button>
-              </div>
-
-              {/* Team Plan */}
-              <div className="bg-white rounded-lg border border-gray-200 p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plans.team.name}</h3>
-                <p className="text-gray-600 mb-4">{plans.team.description}</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900">${plans.team.price}</span>
-                  <span className="text-gray-600">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {plans.team.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => handleUpgrade('team')}
-                  disabled={loading}
-                  className="w-full py-3 px-6 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Upgrade to Team'}
                 </button>
               </div>
             </div>

@@ -21,25 +21,11 @@ export default function PricingPage() {
       popular: true,
       features: [
         '90 days data retention',
-        'Up to 5 ChatGPT apps',
+        'Up to 3 ChatGPT apps',
         'Category benchmarks',
         'CSV data export',
         'Up to 100,000 events/month',
         'Email support'
-      ]
-    },
-    {
-      name: 'Team',
-      price: 59,
-      description: 'For teams building multiple apps',
-      features: [
-        '180 days data retention',
-        'Unlimited ChatGPT apps',
-        'Category benchmarks',
-        'CSV data export',
-        'Unlimited events',
-        'Priority support',
-        'Team collaboration'
       ]
     }
   ];
@@ -72,7 +58,7 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}

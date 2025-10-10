@@ -160,28 +160,34 @@ export default function AppsPage() {
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4">📍 Integration Guide</h2>
             <p className="text-gray-700 mb-6">
-              Follow these steps once to track all analytics (events, revenue, prompts, retention) across your apps.
+              Copy your app&apos;s API key above, then follow these steps to track all analytics.
             </p>
 
             <div className="space-y-4">
               {/* Step 1 */}
               <div className="bg-white rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">1. Add Action to your ChatGPT</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  In ChatGPT → Configure → Actions → Add new action
+                <h3 className="font-semibold text-gray-900 mb-2">1. Copy your API key</h3>
+                <p className="text-sm text-gray-600">
+                  Each app has its own unique API key shown above. Click the copy icon to copy it.
                 </p>
               </div>
 
               {/* Step 2 */}
               <div className="bg-white rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">2. Use this API endpoint</h3>
-                <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs overflow-x-auto mb-2">
+                <h3 className="font-semibold text-gray-900 mb-2">2. Add Action to your ChatGPT</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  In ChatGPT → Configure → Actions → Add new action with this endpoint:
+                </p>
+                <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs overflow-x-auto">
                   <pre>{`POST https://chatgpt-analytics-plum.vercel.app/api/track
 
 Headers:
-  x-app-key: <your-write-key-from-above>
+  x-app-key: YOUR_API_KEY_HERE
   Content-Type: application/json`}</pre>
                 </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Replace <code className="bg-gray-100 px-1.5 py-0.5 rounded">YOUR_API_KEY_HERE</code> with the API key you copied in step 1.
+                </p>
               </div>
 
               {/* Step 3 */}
@@ -189,31 +195,34 @@ Headers:
                 <h3 className="font-semibold text-gray-900 mb-2">3. Track events with this body format</h3>
                 <div className="bg-gray-900 text-gray-100 p-3 rounded font-mono text-xs overflow-x-auto">
                   <pre>{`{
-  "event": "invoked" | "completed" | "error" | "converted",
-  "name": "descriptive_name",
-
-  // Optional - for revenue tracking
+  "event": "invoked",
+  "name": "user_started_conversation",
   "revenue": 29.99,
   "currency": "USD",
-
-  // Optional - for prompt pattern analysis (hash on your end)
   "prompt_hash": "sha256_hash_of_prompt",
-
-  // Optional - for user retention (hash on your end)
   "user_hash": "sha256_hash_of_user_id",
-
-  // Optional - for performance tracking
   "latency_ms": 1200
 }`}</pre>
                 </div>
-                <div className="mt-3 text-sm text-gray-600">
-                  <p className="mb-2"><strong>Event types:</strong></p>
-                  <ul className="space-y-1 ml-4 list-disc">
-                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">invoked</code> - When GPT is called</li>
-                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">completed</code> - Task finished successfully</li>
-                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">error</code> - Something failed</li>
-                    <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">converted</code> - User achieved their goal (include revenue here)</li>
-                  </ul>
+                <div className="mt-3 text-sm text-gray-600 space-y-3">
+                  <div>
+                    <p className="font-semibold mb-1">Event types (required):</p>
+                    <ul className="space-y-1 ml-4 list-disc">
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">invoked</code> - When GPT is called</li>
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">completed</code> - Task finished successfully</li>
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">error</code> - Something failed</li>
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">converted</code> - User achieved their goal (include revenue)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="font-semibold mb-1">Additional fields:</p>
+                    <ul className="space-y-1 ml-4 list-disc">
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">revenue</code> - Dollar amount for Revenue analytics</li>
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">prompt_hash</code> - SHA-256 hash for Prompt analytics</li>
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">user_hash</code> - SHA-256 hash for Retention analytics</li>
+                      <li><code className="bg-gray-100 px-1.5 py-0.5 rounded">latency_ms</code> - Response time in milliseconds</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
 
@@ -221,7 +230,7 @@ Headers:
               <div className="bg-white rounded-lg p-4">
                 <h3 className="font-semibold text-green-700 mb-2">✓ That&apos;s it!</h3>
                 <p className="text-sm text-gray-600">
-                  All features (Dashboard, Revenue, Prompts, Retention, Benchmarks) will automatically populate as data comes in. Include optional fields to enable specific features.
+                  All dashboard features will automatically populate as data comes in. View your analytics across all tabs.
                 </p>
               </div>
             </div>

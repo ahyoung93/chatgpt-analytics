@@ -76,7 +76,7 @@ export default function SignupPage() {
                 value={formData.orgName}
                 onChange={(e) => setFormData({ ...formData, orgName: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
                 placeholder="Acme Inc"
               />
             </div>
@@ -91,7 +91,7 @@ export default function SignupPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
                 placeholder="John Doe"
               />
             </div>
@@ -106,7 +106,7 @@ export default function SignupPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
                 placeholder="you@example.com"
               />
             </div>
@@ -122,7 +122,7 @@ export default function SignupPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
                 placeholder="••••••••"
               />
               <p className="text-sm text-gray-500 mt-1">Must be at least 8 characters</p>

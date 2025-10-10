@@ -252,7 +252,7 @@ Body:
                       </ul>
                     </div>
                     <div className="bg-white bg-opacity-50 rounded p-3">
-                      <p className="font-semibold text-green-700">✓ That's it! View analytics in your dashboard</p>
+                      <p className="font-semibold text-green-700">✓ That&apos;s it! View analytics in your dashboard</p>
                     </div>
                   </div>
                 </div>

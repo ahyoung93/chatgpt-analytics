@@ -107,15 +107,16 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <button
-                className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
+              <Link
+                href="/signup"
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors block text-center ${
                   plan.popular
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
                 }`}
               >
                 {plan.price === 0 ? 'Get Started' : 'Subscribe'}
-              </button>
+              </Link>
             </div>
           ))}
         </div>

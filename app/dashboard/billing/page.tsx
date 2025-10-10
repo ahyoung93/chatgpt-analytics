@@ -66,23 +66,34 @@ export default function BillingPage() {
   };
 
   useEffect(() => {
-    const fetchAppsCount = async () => {
+    const fetchData = async () => {
       try {
         setLoadingData(true);
-        const response = await fetch('/api/apps');
-        if (response.ok) {
-          const data = await response.json();
-          setAppsCount(data.apps?.length || 0);
+
+        // Fetch apps count
+        const appsResponse = await fetch('/api/apps');
+        if (appsResponse.ok) {
+          const appsData = await appsResponse.json();
+          setAppsCount(appsData.apps?.length || 0);
+        }
+
+        // Fetch org to get current plan
+        if (orgId) {
+          const orgResponse = await fetch(`/api/orgs/${orgId}`);
+          if (orgResponse.ok) {
+            const orgData = await orgResponse.json();
+            setCurrentPlan(orgData.org?.plan || 'free');
+          }
         }
       } catch (error) {
-        console.error('Error fetching apps count:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoadingData(false);
       }
     };
 
-    fetchAppsCount();
-  }, []);
+    fetchData();
+  }, [orgId]);
 
   const handleUpgrade = async (plan: 'pro' | 'team') => {
     if (!orgId) {

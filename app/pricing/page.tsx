@@ -16,7 +16,7 @@ export default function PricingPage() {
     },
     {
       name: 'Pro',
-      price: 49,
+      price: 19,
       description: 'For serious app developers',
       popular: true,
       features: [
@@ -30,7 +30,7 @@ export default function PricingPage() {
     },
     {
       name: 'Team',
-      price: 99,
+      price: 59,
       description: 'For teams building multiple apps',
       features: [
         '180 days data retention',

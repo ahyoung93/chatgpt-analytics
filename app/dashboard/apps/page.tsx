@@ -173,7 +173,7 @@ export default function AppsPage() {
                     value={newApp.name}
                     onChange={(e) => setNewApp({ ...newApp, name: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
                     placeholder="My ChatGPT App"
                   />
                 </div>
@@ -186,7 +186,7 @@ export default function AppsPage() {
                     id="category"
                     value={newApp.category}
                     onChange={(e) => setNewApp({ ...newApp, category: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-gray-900"
                   >
                     {categories.map((cat) => (
                       <option key={cat} value={cat}>

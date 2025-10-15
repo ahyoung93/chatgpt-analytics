@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
     // Get the x-app-key header
     const appKey = request.headers.get('x-app-key');
 
+    console.log('[track-gpt] Received request with API key:', appKey ? `${appKey.substring(0, 15)}...` : 'MISSING');
+
     if (!appKey) {
       return NextResponse.json(
         { error: 'Missing x-app-key header' },
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
+    console.log('[track-gpt] Request body:', JSON.stringify(body, null, 2));
     const validatedData = trackGptEventSchema.parse(body);
 
     // Hash sensitive data

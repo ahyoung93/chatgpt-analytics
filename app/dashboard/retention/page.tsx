@@ -28,28 +28,78 @@ export default function RetentionPage() {
   });
   const [cohorts, setCohorts] = useState<CohortData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedApp, setSelectedApp] = useState<string>('');
+  const [apps, setApps] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
-    fetchRetentionMetrics();
+    fetchApps();
   }, []);
 
+  useEffect(() => {
+    if (selectedApp) {
+      fetchRetentionMetrics();
+    }
+  }, [selectedApp]);
+
+  const fetchApps = async () => {
+    try {
+      const response = await fetch('/api/apps');
+      const data = await response.json();
+      if (data.apps && data.apps.length > 0) {
+        setApps(data.apps);
+        setSelectedApp(data.apps[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching apps:', error);
+    }
+  };
+
   const fetchRetentionMetrics = async () => {
-    // TODO: Fetch actual retention metrics from API
-    setLoading(false);
-    setMetrics({
-      day1Retention: 0,
-      day7Retention: 0,
-      day30Retention: 0,
-      totalUsers: 0
-    });
-    setCohorts([]);
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/metrics/retention?app_id=${selectedApp}`);
+      const data = await response.json();
+      setMetrics(data.metrics || {
+        day1Retention: 0,
+        day7Retention: 0,
+        day30Retention: 0,
+        totalUsers: 0
+      });
+      setCohorts(data.cohorts || []);
+    } catch (error) {
+      console.error('Error fetching retention metrics:', error);
+      setMetrics({
+        day1Retention: 0,
+        day7Retention: 0,
+        day30Retention: 0,
+        totalUsers: 0
+      });
+      setCohorts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <DashboardLayout>
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">User Retention Analytics</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">User Retention Analytics</h1>
+            {apps.length > 0 && (
+              <select
+                value={selectedApp}
+                onChange={(e) => setSelectedApp(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-gray-900"
+              >
+                {apps.map((app) => (
+                  <option key={app.id} value={app.id}>
+                    {app.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
 
         {/* Retention Metrics Cards */}

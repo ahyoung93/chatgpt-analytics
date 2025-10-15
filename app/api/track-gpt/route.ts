@@ -84,7 +84,14 @@ export async function POST(request: NextRequest) {
 
     const trackData = await trackResponse.json();
 
+    console.log('[track-gpt] Response from /api/track:', {
+      status: trackResponse.status,
+      ok: trackResponse.ok,
+      data: trackData
+    });
+
     if (!trackResponse.ok) {
+      console.error('[track-gpt] Error from /api/track:', trackData);
       return NextResponse.json(
         trackData,
         { status: trackResponse.status }

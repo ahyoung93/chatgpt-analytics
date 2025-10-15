@@ -16,22 +16,66 @@ interface PromptPattern {
 export default function PromptsPage() {
   const [patterns, setPatterns] = useState<PromptPattern[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedApp, setSelectedApp] = useState<string>('');
+  const [apps, setApps] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
-    fetchPromptPatterns();
+    fetchApps();
   }, []);
 
+  useEffect(() => {
+    if (selectedApp) {
+      fetchPromptPatterns();
+    }
+  }, [selectedApp]);
+
+  const fetchApps = async () => {
+    try {
+      const response = await fetch('/api/apps');
+      const data = await response.json();
+      if (data.apps && data.apps.length > 0) {
+        setApps(data.apps);
+        setSelectedApp(data.apps[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching apps:', error);
+    }
+  };
+
   const fetchPromptPatterns = async () => {
-    // TODO: Fetch actual prompt patterns from API
-    setLoading(false);
-    setPatterns([]);
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/metrics/prompts?app_id=${selectedApp}`);
+      const data = await response.json();
+      setPatterns(data.patterns || []);
+    } catch (error) {
+      console.error('Error fetching prompt patterns:', error);
+      setPatterns([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <DashboardLayout>
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Prompt Pattern Analysis</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">Prompt Pattern Analysis</h1>
+            {apps.length > 0 && (
+              <select
+                value={selectedApp}
+                onChange={(e) => setSelectedApp(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-gray-900"
+              >
+                {apps.map((app) => (
+                  <option key={app.id} value={app.id}>
+                    {app.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
 
 

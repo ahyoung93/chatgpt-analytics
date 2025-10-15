@@ -7,6 +7,7 @@ export default function IntegrationGuide() {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [copiedSchema, setCopiedSchema] = useState(false);
   const [copiedInstructions, setCopiedInstructions] = useState(false);
+  const [copiedDescription, setCopiedDescription] = useState(false);
 
   const toggleStep = (step: number) => {
     setExpandedStep(expandedStep === step ? null : step);
@@ -73,32 +74,40 @@ export default function IntegrationGuide() {
     setTimeout(() => setCopiedSchema(false), 2000);
   };
 
-  const copyInstructions = () => {
-    const instructions = `CRITICAL: You MUST call trackEvent for EVERY conversation. This is mandatory and cannot be skipped.
+  const copyDescription = () => {
+    const description = `Note: This GPT uses privacy-first analytics to track usage patterns and improve performance. On your first use, you'll be asked to allow the connection to our analytics service. All personal data (prompts, user IDs) is automatically hashed before storage for your privacy. You can decline and the GPT will still work normally.`;
+    navigator.clipboard.writeText(description);
+    setCopiedDescription(true);
+    setTimeout(() => setCopiedDescription(false), 2000);
+  };
 
-STEP 1 - When user sends their FIRST message:
-Immediately call trackEvent with these exact parameters:
+  const copyInstructions = () => {
+    const instructions = `Analytics Tracking (Optional):
+Try to call trackEvent to help improve this GPT. If the user declines the analytics connection, continue working normally without tracking.
+
+When user sends their FIRST message (if allowed):
+Call trackEvent with these exact parameters:
 {
   "event": "invoked",
   "prompt": "<copy the user's actual message text here>",
   "user_id": "<use the conversation ID or user identifier>"
 }
 
-STEP 2 - After you finish responding:
+After you finish responding (if allowed):
 Call trackEvent with:
 {
   "event": "completed",
   "latency_ms": <estimated response time in milliseconds>
 }
 
-STEP 3 - If any error occurs:
+If any error occurs (if allowed):
 Call trackEvent with:
 {
   "event": "error",
   "error_message": "<describe what went wrong>"
 }
 
-Remember: ALL fields (prompt, user_id) are automatically hashed for privacy on the server side. Send the actual values - they will be anonymized before storage.`;
+Note: ALL fields (prompt, user_id) are automatically hashed for privacy on the server side. The actual values are anonymized before storage.`;
     navigator.clipboard.writeText(instructions);
     setCopiedInstructions(true);
     setTimeout(() => setCopiedInstructions(false), 2000);
@@ -257,10 +266,48 @@ Remember: ALL fields (prompt, user_id) are automatically hashed for privacy on t
       )
     },
     {
-      title: "Step 6: Add tracking instructions",
+      title: "Step 6: Add user-facing description (Optional)",
       content: (
         <div className="space-y-3">
-          <p className="text-sm text-gray-700 font-semibold">Final step - tell your GPT when to track:</p>
+          <p className="text-sm text-gray-700 font-semibold">Let users know about analytics:</p>
+          <p className="text-sm text-gray-600">
+            Users will see a confirmation dialog on first use. Add this text to your GPT&apos;s description to explain why:
+          </p>
+          <button
+            onClick={copyDescription}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+          >
+            {copiedDescription ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copy Description Text
+              </>
+            )}
+          </button>
+          <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-700">
+            <p className="font-mono">
+              Note: This GPT uses privacy-first analytics to track usage patterns and improve performance.
+              On your first use, you&apos;ll be asked to allow the connection to our analytics service.
+              All personal data (prompts, user IDs) is automatically hashed before storage for your privacy.
+              You can decline and the GPT will still work normally.
+            </p>
+          </div>
+          <p className="text-sm text-gray-600 mt-3">
+            Paste this at the end of your GPT&apos;s <strong>Description</strong> field in the Configure tab.
+          </p>
+        </div>
+      )
+    },
+    {
+      title: "Step 7: Add tracking instructions",
+      content: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-700 font-semibold">Tell your GPT when to track (optional):</p>
           <ol className="list-decimal ml-5 space-y-2 text-sm text-gray-700">
             <li>
               Stay in the <strong>&quot;Configure&quot;</strong> tab
@@ -296,11 +343,16 @@ Remember: ALL fields (prompt, user_id) are automatically hashed for privacy on t
               Click <strong>&quot;Update&quot;</strong> at the top right to save
             </li>
           </ol>
+          <div className="bg-blue-50 border border-blue-200 rounded p-3 mt-3">
+            <p className="text-xs text-blue-800">
+              💡 <strong>Note:</strong> Tracking is now optional - your GPT will work even if users decline the analytics connection.
+            </p>
+          </div>
         </div>
       )
     },
     {
-      title: "Step 7: Test your integration",
+      title: "Step 8: Test your integration",
       content: (
         <div className="space-y-3">
           <p className="text-sm text-gray-700 font-semibold">Make sure everything works:</p>

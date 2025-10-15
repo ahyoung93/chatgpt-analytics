@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import IntegrationGuide from '@/components/IntegrationGuide';
 import { Plus, Copy, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 interface App {
@@ -157,13 +158,20 @@ export default function AppsPage() {
 
         {/* Universal Integration Guide - Only show if apps exist */}
         {!loading && apps.length > 0 && (
+          <IntegrationGuide />
+        )}
+
+        {!loading && apps.length > 0 && false && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4">📍 Integration Guide</h2>
-            <p className="text-gray-700 mb-6">
-              Copy your app&apos;s API key above, then follow these steps to track all analytics.
+            <p className="text-gray-700 mb-4">
+              Follow these simple steps to connect your Custom GPT. Takes about 2 minutes!
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              💡 Tip: Click each step to expand detailed instructions
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Step 1 */}
               <div className="bg-white rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-2">1. Copy your API key</h3>

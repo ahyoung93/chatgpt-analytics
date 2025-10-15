@@ -22,7 +22,7 @@ export async function authenticateTrackRequest(
     return { app: null, error: 'Missing x-app-key header' };
   }
 
-  if (!writeKey.startsWith('sk_')) {
+  if (!writeKey.startsWith('odin_')) {
     return { app: null, error: 'Invalid write key format' };
   }
 

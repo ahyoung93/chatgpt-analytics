@@ -51,6 +51,11 @@ export async function POST(request: NextRequest) {
     const prompt_hash = validatedData.prompt ? hashSHA256(validatedData.prompt) : undefined;
     const user_hash = validatedData.user_id ? hashSHA256(validatedData.user_id) : undefined;
 
+    console.log('[track-gpt] Hashed data:', {
+      prompt_hash: prompt_hash ? `${prompt_hash.substring(0, 16)}...` : 'null',
+      user_hash: user_hash ? `${user_hash.substring(0, 16)}...` : 'null'
+    });
+
     // Build the payload for the internal track API
     const trackPayload = {
       event: validatedData.event,
@@ -63,6 +68,8 @@ export async function POST(request: NextRequest) {
       revenue: validatedData.revenue,
       currency: validatedData.currency,
     };
+
+    console.log('[track-gpt] Forwarding to /api/track:', JSON.stringify(trackPayload, null, 2));
 
     // Forward to the internal track API
     const trackUrl = new URL('/api/track', request.url);

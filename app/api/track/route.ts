@@ -49,7 +49,13 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
+    console.log('[track] Received payload:', JSON.stringify(body, null, 2));
     const validatedData = trackEventSchema.parse(body);
+
+    console.log('[track] Validated data:', {
+      prompt_hash: validatedData.prompt_hash ? `${validatedData.prompt_hash.substring(0, 16)}...` : 'null',
+      user_hash: validatedData.user_hash ? `${validatedData.user_hash.substring(0, 16)}...` : 'null'
+    });
 
     const supabase = createServerClient();
 
@@ -70,6 +76,14 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single();
+
+    console.log('[track] Insert result:', {
+      success: !insertError,
+      event_id: event?.id,
+      prompt_hash_saved: event?.prompt_hash ? `${event.prompt_hash.substring(0, 16)}...` : 'null',
+      user_hash_saved: event?.user_hash ? `${event.user_hash.substring(0, 16)}...` : 'null',
+      error: insertError?.message
+    });
 
     if (insertError) {
       throw new Error('Failed to insert event');

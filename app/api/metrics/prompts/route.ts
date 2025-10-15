@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
+    console.log('[prompts] Auth check:', { user: user?.id, authError: authError?.message });
+
     if (authError || !user) {
+      console.error('[prompts] Unauthorized:', authError);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -25,6 +28,8 @@ export async function GET(request: NextRequest) {
     // Get app_id from query params
     const { searchParams } = new URL(request.url);
     const appId = searchParams.get('app_id');
+
+    console.log('[prompts] App ID requested:', appId);
 
     if (!appId) {
       return NextResponse.json(
@@ -76,6 +81,8 @@ export async function GET(request: NextRequest) {
       .select('prompt_hash, event_type, latency_ms')
       .eq('app_id', appId)
       .not('prompt_hash', 'is', null);
+
+    console.log('[prompts] Events fetched:', { count: events?.length, error: eventsError?.message });
 
     if (eventsError) {
       throw new Error('Failed to fetch events');
@@ -130,6 +137,8 @@ export async function GET(request: NextRequest) {
 
     // Sort by total uses descending
     promptPatterns.sort((a, b) => b.total_uses - a.total_uses);
+
+    console.log('[prompts] Returning patterns:', { count: promptPatterns.length, patterns: promptPatterns.slice(0, 3) });
 
     return NextResponse.json({
       patterns: promptPatterns

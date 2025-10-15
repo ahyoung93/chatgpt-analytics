@@ -46,8 +46,16 @@ export default function PromptsPage() {
   const fetchPromptPatterns = async () => {
     try {
       setLoading(true);
+      console.log('[Prompts Page] Fetching patterns for app:', selectedApp);
       const response = await fetch(`/api/metrics/prompts?app_id=${selectedApp}`);
+      console.log('[Prompts Page] Response status:', response.status);
       const data = await response.json();
+      console.log('[Prompts Page] Response data:', data);
+
+      if (!response.ok) {
+        console.error('[Prompts Page] API error:', data);
+      }
+
       setPatterns(data.patterns || []);
     } catch (error) {
       console.error('Error fetching prompt patterns:', error);

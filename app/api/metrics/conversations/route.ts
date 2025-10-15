@@ -111,11 +111,17 @@ export async function GET(request: NextRequest) {
       const conv = conversationMap.get(event.user_hash)!;
 
       if (event.event_type === 'invoked') {
-        conv.messages++;
         conv.invoked++;
       }
-      if (event.event_type === 'completed') conv.completed++;
-      if (event.event_type === 'error') conv.errors++;
+      if (event.event_type === 'completed') {
+        conv.completed++;
+      }
+      if (event.event_type === 'error') {
+        conv.errors++;
+      }
+
+      // Count messages as max of invoked or completed (some GPTs only send one consistently)
+      // We'll calculate this after the loop
 
       if (timestamp < conv.firstSeen) conv.firstSeen = timestamp;
       if (timestamp > conv.lastSeen) conv.lastSeen = timestamp;
@@ -123,7 +129,13 @@ export async function GET(request: NextRequest) {
       conv.dates.add(dateKey);
     }
 
-    const conversations = Array.from(conversationMap.values());
+    // Calculate message count for each conversation
+    // Use max of invoked or completed (GPTs might only send one consistently)
+    const conversations = Array.from(conversationMap.values()).map(conv => ({
+      ...conv,
+      messages: Math.max(conv.invoked, conv.completed)
+    }));
+
     const totalConversations = conversations.length;
     const totalMessages = conversations.reduce((sum, c) => sum + c.messages, 0);
     const totalErrors = conversations.reduce((sum, c) => sum + c.errors, 0);

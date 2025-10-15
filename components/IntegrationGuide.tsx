@@ -27,9 +27,9 @@ export default function IntegrationGuide() {
     }
   ],
   "paths": {
-    "/api/track-gpt": {
+    "/api/debug-track": {
       "post": {
-        "summary": "Track an analytics event from GPT",
+        "summary": "Track an analytics event from GPT (Debug Mode)",
         "operationId": "trackEvent",
         "requestBody": {
           "required": true,

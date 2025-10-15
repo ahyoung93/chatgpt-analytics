@@ -192,9 +192,9 @@ export default function AppsPage() {
     }
   ],
   "paths": {
-    "/api/track": {
+    "/api/track-gpt": {
       "post": {
-        "summary": "Track an analytics event",
+        "summary": "Track an analytics event from GPT",
         "operationId": "trackEvent",
         "requestBody": {
           "required": true,
@@ -213,6 +213,14 @@ export default function AppsPage() {
                     "type": "string",
                     "description": "Custom event name"
                   },
+                  "prompt": {
+                    "type": "string",
+                    "description": "User prompt (will be hashed automatically)"
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "description": "User ID (will be hashed automatically)"
+                  },
                   "revenue": {
                     "type": "number",
                     "description": "Revenue amount in dollars"
@@ -221,17 +229,13 @@ export default function AppsPage() {
                     "type": "string",
                     "default": "USD"
                   },
-                  "prompt_hash": {
-                    "type": "string",
-                    "description": "SHA-256 hash of the user prompt"
-                  },
-                  "user_hash": {
-                    "type": "string",
-                    "description": "SHA-256 hash of the user ID"
-                  },
                   "latency_ms": {
                     "type": "number",
                     "description": "Response latency in milliseconds"
+                  },
+                  "error_message": {
+                    "type": "string",
+                    "description": "Error message if event type is error"
                   }
                 }
               }
@@ -280,14 +284,33 @@ export default function AppsPage() {
 
               {/* Step 4 */}
               <div className="bg-white rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">4. Test your integration</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">4. Update your GPT instructions</h3>
                 <p className="text-sm text-gray-600 mb-3">
-                  In your Custom GPT instructions, add code to call the trackEvent action:
+                  Add these tracking calls to your GPT&apos;s instructions for full analytics:
                 </p>
-                <div className="bg-gray-50 border border-gray-200 p-3 rounded text-xs">
-                  <p className="text-gray-700 mb-2">Example instructions to add to your GPT:</p>
-                  <p className="text-gray-600 italic">
-                    &quot;When a user starts a conversation, call trackEvent with event=&apos;invoked&apos;. When you complete a task, call trackEvent with event=&apos;completed&apos;.&quot;
+                <div className="bg-gray-50 border border-gray-200 p-3 rounded text-xs space-y-3">
+                  <div>
+                    <p className="text-gray-700 font-semibold mb-1">Basic tracking:</p>
+                    <p className="text-gray-600">
+                      When a user starts a conversation, call trackEvent with event=&quot;invoked&quot;, prompt=&quot;[user message]&quot;, user_id=&quot;[user ID]&quot;
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-700 font-semibold mb-1">Track completions:</p>
+                    <p className="text-gray-600">
+                      When you finish helping the user, call trackEvent with event=&quot;completed&quot;, latency_ms=[time taken]
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-700 font-semibold mb-1">Track revenue (for paid features):</p>
+                    <p className="text-gray-600">
+                      When a user completes a purchase, call trackEvent with event=&quot;converted&quot;, revenue=[amount], currency=&quot;USD&quot;
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 bg-blue-50 border border-blue-200 p-3 rounded text-xs">
+                  <p className="text-blue-800">
+                    <strong>Note:</strong> The API automatically hashes prompts and user IDs for privacy. You can send raw data safely.
                   </p>
                 </div>
               </div>

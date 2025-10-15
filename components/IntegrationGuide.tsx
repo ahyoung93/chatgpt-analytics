@@ -143,7 +143,10 @@ The API automatically hashes sensitive data for privacy.`;
               On the <strong>left sidebar</strong>, find your Custom GPT and click on it
             </li>
             <li>
-              Look for the <strong>&quot;Edit&quot;</strong> button (usually in the top right) and click it
+              Click on the <strong>downward arrow (▼)</strong> next to your GPT name at the top
+            </li>
+            <li>
+              Select <strong>&quot;Edit GPT&quot;</strong> from the dropdown menu
             </li>
             <li>
               You should now see the GPT editor with tabs like &quot;Create&quot; and &quot;Configure&quot;
@@ -151,7 +154,7 @@ The API automatically hashes sensitive data for privacy.`;
           </ol>
           <div className="bg-gray-50 border border-gray-200 rounded p-3 mt-3">
             <p className="text-xs text-gray-600">
-              ℹ️ If you don&apos;t see an &quot;Edit&quot; button, you might not be the owner of this GPT.
+              ℹ️ If you don&apos;t see the &quot;Edit GPT&quot; option, you might not be the owner of this GPT.
             </p>
           </div>
         </div>

@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
     // Daily conversations (last 30 days)
     const dailyMap = new Map<string, number>();
     for (const conv of conversations) {
-      for (const date of conv.dates) {
+      for (const date of Array.from(conv.dates)) {
         dailyMap.set(date, (dailyMap.get(date) || 0) + 1);
       }
     }

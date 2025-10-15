@@ -115,7 +115,7 @@ The API automatically hashes sensitive data for privacy.`;
       content: (
         <div className="space-y-3">
           <p className="text-sm text-gray-700">
-            Look at your app card above. You&apos;ll see a section labeled <strong>&quot;API Write Key&quot;</strong>.
+            Look at your app card below. You&apos;ll see a section labeled <strong>&quot;API Write Key&quot;</strong>.
           </p>
           <ol className="list-decimal ml-5 space-y-2 text-sm text-gray-700">
             <li>Click the <strong>eye icon (👁)</strong> to reveal the full key</li>
@@ -161,7 +161,7 @@ The API automatically hashes sensitive data for privacy.`;
       )
     },
     {
-      title: "Step 3: Set up authentication FIRST",
+      title: "Step 3: Set up authentication first",
       content: (
         <div className="space-y-3">
           <p className="text-sm text-gray-700 font-semibold">In the GPT editor:</p>
@@ -176,25 +176,21 @@ The API automatically hashes sensitive data for privacy.`;
               Click <strong>&quot;Create new action&quot;</strong>
             </li>
             <li>
-              <strong>BEFORE pasting the schema</strong>, scroll down to find <strong>&quot;Authentication&quot;</strong>
+              Click <strong>&quot;Authentication&quot;</strong> and select <strong>&quot;API Key&quot;</strong>
             </li>
             <li>
-              Click the dropdown that says &quot;None&quot; and select <strong>&quot;API Key&quot;</strong>
+              Paste your API key from Step 1 into the <strong>&quot;API Key&quot;</strong> field
             </li>
             <li>
-              A new dropdown appears - select <strong>&quot;Custom&quot;</strong>
+              Click on <strong>&quot;Custom&quot;</strong> for Auth Type
             </li>
             <li>
-              You&apos;ll see two fields:
-              <ul className="list-disc ml-5 mt-2 space-y-1">
-                <li><strong>API Key:</strong> Paste your API key from Step 1</li>
-                <li><strong>Custom Header Name:</strong> Type exactly <code className="bg-gray-100 px-1 rounded">x-app-key</code></li>
-              </ul>
+              In the <strong>&quot;Custom Header Name&quot;</strong> field, enter exactly: <code className="bg-gray-100 px-1 rounded">x-app-key</code>
             </li>
           </ol>
           <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mt-3">
             <p className="text-xs text-yellow-800">
-              ⚠️ <strong>Important:</strong> Do this BEFORE adding the schema in Step 4!
+              ⚠️ <strong>Important:</strong> Do this before adding the schema in Step 4!
             </p>
           </div>
         </div>

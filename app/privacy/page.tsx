@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
               <strong>Last Updated:</strong> {new Date().toLocaleDateString()}
             </p>
             <p className="text-gray-700">
-              Odin Analytics ("we", "our", or "us") provides analytics services for Custom GPT applications.
+              Odin Analytics (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) provides analytics services for Custom GPT applications.
               This Privacy Policy explains how we collect, use, and protect information when you use our service.
             </p>
           </section>
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">2. How We Use Your Information</h2>
             <ul className="list-disc ml-6 space-y-2 text-gray-700">
-              <li>Provide analytics dashboards showing your GPT's performance</li>
+              <li>Provide analytics dashboards showing your GPT&apos;s performance</li>
               <li>Calculate aggregate category benchmarks (with k-anonymity ≥ 5 apps)</li>
               <li>Process payments and manage subscriptions</li>
               <li>Send service-related communications</li>
@@ -152,7 +152,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Changes to This Policy</h2>
             <p className="text-gray-700">
               We may update this Privacy Policy from time to time. We will notify you of any changes by
-              posting the new policy on this page and updating the "Last Updated" date.
+              posting the new policy on this page and updating the &quot;Last Updated&quot; date.
             </p>
           </section>
 

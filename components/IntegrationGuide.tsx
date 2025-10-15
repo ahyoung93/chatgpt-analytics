@@ -230,7 +230,7 @@ The API automatically hashes sensitive data for privacy.`;
               Paste it into the <strong>Schema</strong> text box
             </li>
             <li>
-              When asked for <strong>Privacy Policy URL</strong>, paste:<br />
+              For <strong>Privacy Policy</strong> block, paste:<br />
               <code className="bg-gray-100 px-2 py-1 rounded text-xs block mt-1">
                 https://chatgpt-analytics-plum.vercel.app/privacy
               </code>

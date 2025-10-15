@@ -136,6 +136,13 @@ export async function GET(request: NextRequest) {
       messages: Math.max(conv.invoked, conv.completed)
     }));
 
+    console.log('[conversations] Conversation details:', conversations.map(c => ({
+      user_hash: c.user_hash.substring(0, 16) + '...',
+      invoked: c.invoked,
+      completed: c.completed,
+      messages: c.messages
+    })));
+
     const totalConversations = conversations.length;
     const totalMessages = conversations.reduce((sum, c) => sum + c.messages, 0);
     const totalErrors = conversations.reduce((sum, c) => sum + c.errors, 0);

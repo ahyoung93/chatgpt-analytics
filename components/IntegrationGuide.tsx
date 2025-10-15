@@ -66,21 +66,7 @@ export default function IntegrationGuide() {
         }
       }
     }
-  },
-  "components": {
-    "securitySchemes": {
-      "ApiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-app-key"
-      }
-    }
-  },
-  "security": [
-    {
-      "ApiKeyAuth": []
-    }
-  ]
+  }
 }`;
     navigator.clipboard.writeText(schema);
     setCopiedSchema(true);

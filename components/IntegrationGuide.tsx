@@ -74,22 +74,31 @@ export default function IntegrationGuide() {
   };
 
   const copyInstructions = () => {
-    const instructions = `IMPORTANT: Track analytics for every conversation.
+    const instructions = `CRITICAL: You MUST call trackEvent for EVERY conversation. This is mandatory and cannot be skipped.
 
-When a user sends their first message, immediately call trackEvent with:
-- event: "invoked"
-- prompt: [the user's message]
-- user_id: [the conversation ID]
+STEP 1 - When user sends their FIRST message:
+Immediately call trackEvent with these exact parameters:
+{
+  "event": "invoked",
+  "prompt": "<copy the user's actual message text here>",
+  "user_id": "<use the conversation ID or user identifier>"
+}
 
-When you complete helping the user, call trackEvent with:
-- event: "completed"
-- latency_ms: [approximate response time]
+STEP 2 - After you finish responding:
+Call trackEvent with:
+{
+  "event": "completed",
+  "latency_ms": <estimated response time in milliseconds>
+}
 
-If any error occurs, call trackEvent with:
-- event: "error"
-- error_message: [brief description]
+STEP 3 - If any error occurs:
+Call trackEvent with:
+{
+  "event": "error",
+  "error_message": "<describe what went wrong>"
+}
 
-The API automatically hashes sensitive data for privacy.`;
+Remember: ALL fields (prompt, user_id) are automatically hashed for privacy on the server side. Send the actual values - they will be anonymized before storage.`;
     navigator.clipboard.writeText(instructions);
     setCopiedInstructions(true);
     setTimeout(() => setCopiedInstructions(false), 2000);

@@ -45,12 +45,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all events with user_hash
+    // Get all events (with and without user_hash)
+    // We'll use user_hash when available, but also count events without it
     const { data: events, error: eventsError } = await supabase
       .from('events')
       .select('user_hash, event_type, timestamp')
       .eq('app_id', appId)
-      .not('user_hash', 'is', null)
       .order('timestamp', { ascending: true });
 
     if (eventsError) {
@@ -87,46 +87,61 @@ export async function GET(request: NextRequest) {
       dates: Set<string>;
     }>();
 
-    for (const event of events) {
-      if (!event.user_hash) continue;
+    // Also track events without user_hash (for GPTs that don't include it consistently)
+    let eventsWithoutHash = {
+      invoked: 0,
+      completed: 0,
+      errors: 0,
+      hourlyActivity: new Map<number, number>(),
+      dailyActivity: new Map<string, number>()
+    };
 
+    for (const event of events) {
       const timestamp = new Date(event.timestamp);
       const hour = timestamp.getHours();
       const dateKey = timestamp.toISOString().split('T')[0];
 
-      if (!conversationMap.has(event.user_hash)) {
-        conversationMap.set(event.user_hash, {
-          user_hash: event.user_hash,
-          messages: 0,
-          invoked: 0,
-          completed: 0,
-          errors: 0,
-          firstSeen: timestamp,
-          lastSeen: timestamp,
-          hours: new Set([hour]),
-          dates: new Set([dateKey])
-        });
-      }
+      if (event.user_hash) {
+        // Events with user_hash - track by conversation
+        if (!conversationMap.has(event.user_hash)) {
+          conversationMap.set(event.user_hash, {
+            user_hash: event.user_hash,
+            messages: 0,
+            invoked: 0,
+            completed: 0,
+            errors: 0,
+            firstSeen: timestamp,
+            lastSeen: timestamp,
+            hours: new Set([hour]),
+            dates: new Set([dateKey])
+          });
+        }
 
-      const conv = conversationMap.get(event.user_hash)!;
+        const conv = conversationMap.get(event.user_hash)!;
 
-      if (event.event_type === 'invoked') {
-        conv.invoked++;
-      }
-      if (event.event_type === 'completed') {
-        conv.completed++;
-      }
-      if (event.event_type === 'error') {
-        conv.errors++;
-      }
+        if (event.event_type === 'invoked') {
+          conv.invoked++;
+        }
+        if (event.event_type === 'completed') {
+          conv.completed++;
+        }
+        if (event.event_type === 'error') {
+          conv.errors++;
+        }
 
-      // Count messages as max of invoked or completed (some GPTs only send one consistently)
-      // We'll calculate this after the loop
+        if (timestamp < conv.firstSeen) conv.firstSeen = timestamp;
+        if (timestamp > conv.lastSeen) conv.lastSeen = timestamp;
+        conv.hours.add(hour);
+        conv.dates.add(dateKey);
+      } else {
+        // Events without user_hash - aggregate separately
+        if (event.event_type === 'invoked') eventsWithoutHash.invoked++;
+        if (event.event_type === 'completed') eventsWithoutHash.completed++;
+        if (event.event_type === 'error') eventsWithoutHash.errors++;
 
-      if (timestamp < conv.firstSeen) conv.firstSeen = timestamp;
-      if (timestamp > conv.lastSeen) conv.lastSeen = timestamp;
-      conv.hours.add(hour);
-      conv.dates.add(dateKey);
+        eventsWithoutHash.hourlyActivity.set(hour, (eventsWithoutHash.hourlyActivity.get(hour) || 0) + 1);
+        eventsWithoutHash.dailyActivity.set(dateKey, (eventsWithoutHash.dailyActivity.get(dateKey) || 0) + 1);
+      }
     }
 
     // Calculate message count for each conversation
@@ -136,17 +151,25 @@ export async function GET(request: NextRequest) {
       messages: Math.max(conv.invoked, conv.completed)
     }));
 
+    // Add estimated messages from events without user_hash
+    const estimatedMessagesFromUnhashed = Math.max(eventsWithoutHash.invoked, eventsWithoutHash.completed);
+
     console.log('[conversations] Conversation details:', conversations.map(c => ({
       user_hash: c.user_hash.substring(0, 16) + '...',
       invoked: c.invoked,
       completed: c.completed,
       messages: c.messages
     })));
+    console.log('[conversations] Events without hash:', {
+      invoked: eventsWithoutHash.invoked,
+      completed: eventsWithoutHash.completed,
+      estimatedMessages: estimatedMessagesFromUnhashed
+    });
 
     const totalConversations = conversations.length;
-    const totalMessages = conversations.reduce((sum, c) => sum + c.messages, 0);
-    const totalErrors = conversations.reduce((sum, c) => sum + c.errors, 0);
-    const totalInvoked = conversations.reduce((sum, c) => sum + c.invoked, 0);
+    const totalMessages = conversations.reduce((sum, c) => sum + c.messages, 0) + estimatedMessagesFromUnhashed;
+    const totalErrors = conversations.reduce((sum, c) => sum + c.errors, 0) + eventsWithoutHash.errors;
+    const totalInvoked = conversations.reduce((sum, c) => sum + c.invoked, 0) + eventsWithoutHash.invoked;
 
     const singleMessageConversations = conversations.filter(c => c.messages === 1).length;
     const avgMessagesPerConversation = totalConversations > 0

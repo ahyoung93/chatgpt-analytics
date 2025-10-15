@@ -22,23 +22,36 @@ export default function EventsPage() {
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPlan, setCurrentPlan] = useState<'free' | 'pro'>('free');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPlan = async () => {
+    const fetchData = async () => {
       if (orgId) {
         try {
-          const response = await fetch(`/api/orgs/${orgId}`);
-          if (response.ok) {
-            const data = await response.json();
-            setCurrentPlan(data.org?.plan || 'free');
+          // Fetch plan
+          const planResponse = await fetch(`/api/orgs/${orgId}`);
+          if (planResponse.ok) {
+            const planData = await planResponse.json();
+            setCurrentPlan(planData.org?.plan || 'free');
+          }
+
+          // Fetch events
+          const eventsResponse = await fetch('/api/events');
+          if (eventsResponse.ok) {
+            const eventsData = await eventsResponse.json();
+            setEvents(eventsData.events || []);
           }
         } catch (error) {
-          console.error('Error fetching plan:', error);
+          console.error('Error fetching data:', error);
+        } finally {
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     };
 
-    fetchPlan();
+    fetchData();
   }, [orgId]);
 
   const eventTypes = ['all', 'invoked', 'completed', 'error', 'converted', 'custom'];
@@ -192,7 +205,13 @@ export default function EventsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEvents.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    </td>
+                  </tr>
+                ) : filteredEvents.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                       <p className="mb-2">No events yet</p>

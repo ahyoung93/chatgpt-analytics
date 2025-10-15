@@ -14,7 +14,6 @@ interface Stats {
   success_rate: number;
   avg_latency_ms: number;
   errors_today: number;
-  total_revenue: number;
   total_users: number;
 }
 
@@ -69,7 +68,6 @@ export default function DashboardPage() {
           success_rate: 0.939,
           avg_latency_ms: 1240,
           errors_today: 12,
-          total_revenue: 2847.50,
           total_users: 1243
         });
       } else {
@@ -82,7 +80,6 @@ export default function DashboardPage() {
           success_rate: 0,
           avg_latency_ms: 0,
           errors_today: 0,
-          total_revenue: 0,
           total_users: 0
         });
       }
@@ -132,15 +129,6 @@ export default function DashboardPage() {
       bgColor: 'bg-blue-100',
       textColor: 'text-blue-600',
       change: '+12.5%'
-    },
-    {
-      name: 'Total Revenue',
-      value: stats?.total_revenue ? `$${stats.total_revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
-      icon: TrendingUp,
-      color: 'green',
-      bgColor: 'bg-green-100',
-      textColor: 'text-green-600',
-      change: '+18.2%'
     },
     {
       name: 'Total Users',
@@ -205,7 +193,7 @@ export default function DashboardPage() {
         ) : !hasApps || (stats && stats.total_events === 0) ? (
           <>
             {/* Stats Grid - Empty State */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {statCards.map((stat) => {
                 const Icon = stat.icon;
                 return (
@@ -216,7 +204,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <p className="text-2xl font-bold text-gray-900 mb-1">
-                      {stat.name === 'Total Revenue' ? '$0.00' : stat.name === 'Success Rate' ? '0%' : '0'}
+                      {stat.name === 'Success Rate' ? '0%' : '0'}
                     </p>
                     <p className="text-sm text-gray-600">{stat.name}</p>
                   </div>
@@ -242,7 +230,7 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {statCards.map((stat) => {
                 const Icon = stat.icon;
                 return (

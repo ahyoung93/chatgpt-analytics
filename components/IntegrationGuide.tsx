@@ -48,12 +48,6 @@ export default function IntegrationGuide() {
                   "user_id": {
                     "type": "string"
                   },
-                  "revenue": {
-                    "type": "number"
-                  },
-                  "currency": {
-                    "type": "string"
-                  },
                   "latency_ms": {
                     "type": "number"
                   },
@@ -338,7 +332,7 @@ The API automatically hashes sensitive data for privacy.`;
           </ol>
           <div className="bg-green-50 border border-green-200 rounded p-3 mt-3">
             <p className="text-sm text-green-800">
-              ✅ <strong>Success!</strong> Your GPT is now tracking analytics. You&apos;ll see events, revenue, prompts, and retention data as users interact with it.
+              ✅ <strong>Success!</strong> Your GPT is now tracking analytics. You&apos;ll see events, prompts, and retention data as users interact with it.
             </p>
           </div>
         </div>

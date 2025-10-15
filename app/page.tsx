@@ -44,7 +44,7 @@ export default function HomePage() {
             Analytics for ChatGPT Apps
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Track events, revenue, user retention, and prompt patterns for your Custom GPTs.
+            Track events, user retention, and prompt patterns for your Custom GPTs.
             Privacy-first analytics with category benchmarks.
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -70,10 +70,10 @@ export default function HomePage() {
               <BarChart3 className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Events & Revenue
+              Event Tracking
             </h3>
             <p className="text-gray-600">
-              Track invocations, completions, errors, conversions, and revenue across all your events.
+              Track invocations, completions, errors, and conversions across all your events.
             </p>
           </div>
 

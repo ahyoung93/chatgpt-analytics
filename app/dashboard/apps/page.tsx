@@ -229,14 +229,6 @@ export default function AppsPage() {
                     "type": "string",
                     "description": "User ID (will be hashed automatically)"
                   },
-                  "revenue": {
-                    "type": "number",
-                    "description": "Revenue amount in dollars"
-                  },
-                  "currency": {
-                    "type": "string",
-                    "default": "USD"
-                  },
                   "latency_ms": {
                     "type": "number",
                     "description": "Response latency in milliseconds"
@@ -309,12 +301,6 @@ export default function AppsPage() {
                       When you finish helping the user, call trackEvent with event=&quot;completed&quot;, latency_ms=[time taken]
                     </p>
                   </div>
-                  <div>
-                    <p className="text-gray-700 font-semibold mb-1">Track revenue (for paid features):</p>
-                    <p className="text-gray-600">
-                      When a user completes a purchase, call trackEvent with event=&quot;converted&quot;, revenue=[amount], currency=&quot;USD&quot;
-                    </p>
-                  </div>
                 </div>
                 <div className="mt-3 bg-blue-50 border border-blue-200 p-3 rounded text-xs">
                   <p className="text-blue-800">
@@ -327,7 +313,7 @@ export default function AppsPage() {
               <div className="bg-white rounded-lg p-4">
                 <h3 className="font-semibold text-green-700 mb-2">✓ That&apos;s it!</h3>
                 <p className="text-sm text-gray-600">
-                  Your Custom GPT will now automatically track events. View your analytics across all dashboard tabs: Events, Revenue, Prompts, Retention, and Benchmarks.
+                  Your Custom GPT will now automatically track events. View your analytics across all dashboard tabs: Events, Prompts, Retention, and Benchmarks.
                 </p>
               </div>
             </div>

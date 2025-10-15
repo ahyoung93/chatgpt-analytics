@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
                 <ul className="list-disc ml-6 mt-2 space-y-1">
                   <li>Event type (invoked, completed, error, converted)</li>
                   <li>Timestamp</li>
-                  <li>Optional: Revenue data, latency metrics</li>
+                  <li>Optional: Latency metrics</li>
                   <li>Optional: Hashed user IDs (SHA-256) for retention tracking</li>
                   <li>Optional: Hashed prompts (SHA-256) for pattern analysis</li>
                 </ul>

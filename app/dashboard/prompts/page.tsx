@@ -27,6 +27,7 @@ export default function PromptsPage() {
     if (selectedApp) {
       fetchPromptPatterns();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedApp]);
 
   const fetchApps = async () => {

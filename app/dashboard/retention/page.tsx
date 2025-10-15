@@ -39,6 +39,7 @@ export default function RetentionPage() {
     if (selectedApp) {
       fetchRetentionMetrics();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedApp]);
 
   const fetchApps = async () => {

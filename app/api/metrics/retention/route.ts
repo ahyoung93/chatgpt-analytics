@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
 
-    for (const [userHash, activity] of userActivity) {
+    for (const [userHash, activity] of Array.from(userActivity.entries())) {
       const daysSinceFirst = Math.floor(
         (now.getTime() - activity.firstSeen.getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
       day30Retained: Set<string>;
     }>();
 
-    for (const [userHash, activity] of userActivity) {
+    for (const [userHash, activity] of Array.from(userActivity.entries())) {
       // Get Monday of the week for cohort
       const firstSeen = activity.firstSeen;
       const monday = new Date(firstSeen);

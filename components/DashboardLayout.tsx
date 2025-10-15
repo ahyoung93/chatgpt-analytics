@@ -37,7 +37,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Overview', href: '/dashboard', icon: Home },
     { name: 'Apps', href: '/dashboard/apps', icon: Layers },
     { name: 'Events', href: '/dashboard/events', icon: Activity },
-    { name: 'Prompts', href: '/dashboard/prompts', icon: MessageSquare },
     { name: 'Retention', href: '/dashboard/retention', icon: Users },
     { name: 'Benchmarks', href: '/dashboard/benchmarks', icon: TrendingUp },
     { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },

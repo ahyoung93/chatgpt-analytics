@@ -56,11 +56,33 @@ export async function POST(request: NextRequest) {
       user_hash: user_hash ? `${user_hash.substring(0, 16)}...` : 'null'
     });
 
+    // Extract metadata from request headers
+    const userAgent = request.headers.get('user-agent') || 'Unknown';
+    const referer = request.headers.get('referer') || '';
+
+    // Determine source based on user agent
+    let source = 'Unknown';
+    if (userAgent.includes('ChatGPT')) {
+      source = 'ChatGPT';
+    } else if (userAgent.includes('OpenAI')) {
+      source = 'OpenAI';
+    } else if (userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari')) {
+      source = 'Browser';
+    }
+
+    // Merge metadata into properties
+    const enrichedProperties = {
+      ...validatedData.properties,
+      source,
+      user_agent: userAgent,
+      referer: referer || undefined,
+    };
+
     // Build the payload for the internal track API
     const trackPayload = {
       event: validatedData.event,
       name: validatedData.name,
-      properties: validatedData.properties,
+      properties: enrichedProperties,
       prompt_hash,
       user_hash,
       error_message: validatedData.error_message,

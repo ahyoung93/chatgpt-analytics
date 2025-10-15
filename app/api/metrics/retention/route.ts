@@ -4,13 +4,11 @@ export const revalidate = 0;
 
 // GET /api/metrics/retention - Get user retention analytics
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
